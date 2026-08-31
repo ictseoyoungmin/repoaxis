@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0 — 2026-08-31
+
+- Added compact structural query commands: `find`, `show`, `refs`, `parents`, `children`, and `changed`.
+- Added deterministic node matching across node IDs, repository paths, qualified names, and `path:qualified_name` targets, with ambiguity errors instead of arbitrary selection.
+- Added direct canonical-edge adjacency through `refs` without inventing function call references or persisting reverse edges.
+- Added containment-only parent/child traversal and staged-only changed-path filtering.
+- Added compact node projections for search/traversal while `show` returns the full indexed node plus its annotation.
+- Kept query commands snapshot-based; automatic staleness detection and refresh remain separate behavior.
+
 ## 0.6.0 — 2026-08-31
 
 - Added exact current-path last-file-commit context for tracked file nodes.
