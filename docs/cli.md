@@ -42,6 +42,16 @@ Lists direct outgoing `contains` children only.
 ### `repoaxis changed [--staged] [--index FILE]`
 Lists `generated.git_changes`. `--staged` keeps only paths with a staged change. Deleted paths remain visible even when no current file node exists.
 
+### `repoaxis context TARGET [--index FILE]`
+Builds one focused packet for a coding agent without copying source text. It includes the resolved node, source line/column range when available, containment path, immediate children, containing-file Git state and exact last commit, matching working-tree change, target/file annotations, and repository-local `imports` / `imported_by` projections.
+
+Use `context` before broad source reads when a target is already known.
+
+### `repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]`
+Explains bounded structural provenance using only indexed `imports` and `contains` edges. The default import depth is 8 and the default path count is 3.
+
+A path may start at an indexed file with no incoming `imports` edge. Repoaxis reports that as a structural origin rule only; it does not infer that the file is a runtime entry point. Cycles or depth limits can produce no complete upstream path, in which case direct `imported_by` evidence remains available.
+
 ### `repoaxis node-id TYPE PATH [QUALIFIED_NAME]`
 Produces the canonical deterministic node ID for a folder, file, class, or function.
 
@@ -53,8 +63,9 @@ Examples:
 
 ```bash
 repoaxis find parseConfig
+repoaxis context src/config.js:parseConfig
+repoaxis why src/config.js:parseConfig
 repoaxis show file:src/config.js
-repoaxis show src/config.js:parseConfig
 repoaxis refs src/config.js
 repoaxis parents src/config.js:parseConfig
 repoaxis children src/config.js
