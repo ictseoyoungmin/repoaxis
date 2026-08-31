@@ -1,6 +1,6 @@
 # P02 · Release Automation & Publish Contract
 
-Status: REVIEW
+Status: CLOSED
 
 ## Goal
 
@@ -17,6 +17,8 @@ Create a tag-gated GitHub Release pipeline for the existing `0.12.0` package whi
 - Release assets are the npm tarball, SHA-256 checksum, deterministic manifest metadata, and CHANGELOG-derived notes.
 - The release workflow must not contain `npm publish` until trusted publishing is deliberately enabled.
 
-## Verification target
+## Verification
 
-PR CI must pass `npm run check` and `npm run release:dry-run` on the final head. The dry-run must create and validate the real release artifact set in a temporary directory.
+Final PR CI passes `npm run check` and `npm run release:dry-run` with 37/37 tests green. The dry-run produces `repoaxis-0.12.0.tgz`, its SHA-256 checksum, `release-manifest.json`, and CHANGELOG-derived release notes in a temporary directory, validates them, then removes the temporary output.
+
+The verified dry-run SHA-256 on the reviewed head was `1c9a65e0120a1ef1ef9a36467a5245d67d3b16fed063bd28ee66e38ffeb34919`. The release workflow uses `actions/checkout@v6` and `actions/setup-node@v6`, disables package-manager caching for the release job, and contains no npm publication step.
