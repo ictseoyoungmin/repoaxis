@@ -8,7 +8,7 @@ const required = [
   ".claude-plugin/plugin.json",
   "skills/repoaxis/SKILL.md",
   "skills/repoaxis/schemas/repoaxis.schema.json",
-  "skills/repoaxis/lib/vendor/acorn-8.15.0.mjs.gz",
+  "skills/repoaxis/lib/vendor/acorn-8.15.0.mjs",
   "skills/repoaxis/lib/vendor/ACORN-LICENSE.txt",
   "docs/third-party.md",
   "bin/repoaxis",
@@ -33,6 +33,10 @@ for (const manifest of [codex, claude]) {
 if (codex.skills !== "./skills/") throw new Error("Codex skills path must be ./skills/");
 if (JAVASCRIPT_PARSER.name !== "acorn" || JAVASCRIPT_PARSER.version !== "8.15.0") {
   throw new Error("JavaScript parser pin is invalid");
+}
+const vendor = fs.readFileSync(path.join(root, "skills/repoaxis/lib/vendor/acorn-8.15.0.mjs"), "utf8");
+if (!vendor.includes('version = "8.15.0"') && !vendor.includes("version = '8.15.0'")) {
+  throw new Error("Acorn vendored runtime does not identify version 8.15.0");
 }
 const license = fs.readFileSync(path.join(root, "skills/repoaxis/lib/vendor/ACORN-LICENSE.txt"), "utf8");
 if (!license.includes("MIT License")) throw new Error("Acorn MIT license text is missing");

@@ -5,7 +5,7 @@
 ```json
 {
   "schema_version": 1,
-  "tool": { "name": "repoaxis", "version": "0.9.0" },
+  "tool": { "name": "repoaxis", "version": "0.10.0" },
   "authority": "git+working-tree",
   "repository": {
     "root": ".",
@@ -88,7 +88,10 @@
         "conflicted": false
       }
     ],
-    "refresh": { "reason": "manual" }
+    "refresh": {
+      "reason": "query:working-tree-changed",
+      "fingerprint": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
   },
   "annotations": {
     "function:src/service.js::greet": {
@@ -105,6 +108,14 @@
 An annotation key is a canonical node ID and the current V1 writable field is `agent_note`. Repoaxis does not require every annotation key to have a current node: when a node disappears, its note remains as an orphan until the user or agent explicitly clears it. This prevents source edits, temporary deletions, or index rebuilds from silently destroying authored memory.
 
 New notes can only be attached through the CLI to a node that resolves in the current index. Orphaned notes can be read and cleared by their exact stored node ID.
+
+## Refresh projection
+
+`generated.refresh.reason` records why the current generated projection was built. `generated.refresh.fingerprint` is an optional SHA-256 freshness token used by current Repoaxis versions for query-time refresh.
+
+The fingerprint represents Git HEAD/ref plus non-clean working-tree state. Dirty and untracked current files contribute content hashes, while staged/conflicted paths contribute a hash of Git's staged index records. This means Repoaxis can detect repeated saves to an already-modified file and repeated staging even when the high-level Git status kind does not change.
+
+The generated output path itself is excluded from the fingerprint. Annotation-only edits therefore do not make generated structure stale. The fingerprint is cache metadata, not repository authority and not a replacement for Git state fields.
 
 ## Filesystem projection
 

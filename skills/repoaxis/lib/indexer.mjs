@@ -7,10 +7,22 @@ import { addImportEdges } from "./imports.mjs";
 import { attachGitState } from "./git-state.mjs";
 import { attachGitContext } from "./git-context.mjs";
 import { readHead, resolveGitRoot } from "./git.mjs";
-import { createRefreshRecord } from "./refresh.mjs";
+import { computeRepositoryFingerprint, createRefreshRecord } from "./refresh.mjs";
 import { stableStringify } from "./stable-json.mjs";
 
-export const REPOAXIS_VERSION = "0.9.0";
+export const REPOAXIS_VERSION = "0.10.0";
+
+function writeIndexAtomic(outputPath, index) {
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  const temp = path.join(path.dirname(outputPath), `.${path.basename(outputPath)}.tmp-${process.pid}-${Date.now()}`);
+  const mode = fs.existsSync(outputPath) ? fs.statSync(outputPath).mode : 0o666;
+  try {
+    fs.writeFileSync(temp, stableStringify(index), { encoding: "utf8", mode });
+    fs.renameSync(temp, outputPath);
+  } finally {
+    if (fs.existsSync(temp)) fs.unlinkSync(temp);
+  }
+}
 
 export function createIndex(root, { reason = "manual", annotations = {}, excludePaths = [] } = {}) {
   const head = readHead(root);
@@ -19,6 +31,7 @@ export function createIndex(root, { reason = "manual", annotations = {}, exclude
   addImportEdges(graph, root);
   const gitChanges = attachGitState(graph, root, { excludePaths });
   attachGitContext(graph, root);
+  const fingerprint = computeRepositoryFingerprint(root, { excludePaths });
   return {
     schema_version: 1,
     tool: { name: "repoaxis", version: REPOAXIS_VERSION },
@@ -32,7 +45,7 @@ export function createIndex(root, { reason = "manual", annotations = {}, exclude
       nodes: graph.nodes,
       edges: graph.edges,
       git_changes: gitChanges,
-      refresh: createRefreshRecord(reason),
+      refresh: createRefreshRecord(reason, { fingerprint }),
     },
     annotations,
   };
@@ -46,7 +59,6 @@ export function buildIndex({ root = process.cwd(), output = null, reason = "manu
   const outputInsideRepository = relativeOutput && !relativeOutput.startsWith(`..${path.sep}`) && relativeOutput !== ".." && !path.isAbsolute(relativeOutput);
   const excludePaths = outputInsideRepository ? [relativeOutput.replaceAll(path.sep, "/")] : [];
   const index = createIndex(gitRoot, { reason, annotations, excludePaths });
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, stableStringify(index), "utf8");
+  writeIndexAtomic(outputPath, index);
   return { root: gitRoot, output: outputPath, index };
 }
