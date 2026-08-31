@@ -2,6 +2,8 @@ import { isSupportedNodeType } from "./node-id.mjs";
 
 const EDGE_TYPES = new Set(["contains", "imports"]);
 const SYMBOL_TYPES = new Set(["class", "function"]);
+const WORKING_STATES = new Set(["clean", "modified", "added", "deleted", "renamed", "copied", "type-changed", "untracked", "conflicted"]);
+const STAGED_STATES = new Set(["modified", "added", "deleted", "renamed", "copied", "type-changed", "conflicted"]);
 
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -15,6 +17,18 @@ function validSourceRange(source) {
   if (source.end_line < source.start_line) return false;
   if (source.end_line === source.start_line && source.end_column < source.start_column) return false;
   return typeof source.signature === "string" && source.signature.length > 0;
+}
+
+function validGitState(state) {
+  if (!isObject(state)) return false;
+  if (typeof state.tracked !== "boolean" || typeof state.conflicted !== "boolean") return false;
+  if (!WORKING_STATES.has(state.working)) return false;
+  if (!(state.staged === false || STAGED_STATES.has(state.staged))) return false;
+  if (state.rename_from != null && (typeof state.rename_from !== "string" || !state.rename_from)) return false;
+  if (state.copy_from != null && (typeof state.copy_from !== "string" || !state.copy_from)) return false;
+  if (state.similarity != null && (!Number.isInteger(state.similarity) || state.similarity < 0 || state.similarity > 100)) return false;
+  if (state.conflict_code != null && (typeof state.conflict_code !== "string" || state.conflict_code.length !== 2)) return false;
+  return true;
 }
 
 export function validateIndex(index) {
@@ -31,6 +45,9 @@ export function validateIndex(index) {
   const edges = index.generated?.edges;
   if (!isObject(nodes)) errors.push("generated.nodes must be an object");
   if (!Array.isArray(edges)) errors.push("generated.edges must be an array");
+  if (index.generated?.git_changes != null && !Array.isArray(index.generated.git_changes)) {
+    errors.push("generated.git_changes must be an array when present");
+  }
   if (!isObject(index.generated?.refresh) || typeof index.generated.refresh.reason !== "string") {
     errors.push("generated.refresh.reason must be a string");
   }
@@ -40,6 +57,7 @@ export function validateIndex(index) {
       if (node.id !== id) errors.push(`node ${id} must repeat its key in node.id`);
       if (!isSupportedNodeType(node.type)) errors.push(`node ${id} has unsupported type`);
       if (typeof node.path !== "string" || !node.path) errors.push(`node ${id} must include path`);
+      if (node.git != null && !validGitState(node.git)) errors.push(`node ${id} has invalid git state`);
       if (SYMBOL_TYPES.has(node.type)) {
         if (typeof node.qualified_name !== "string" || !node.qualified_name) errors.push(`symbol ${id} must include qualified_name`);
         if (typeof node.parent_id !== "string" || !node.parent_id) errors.push(`symbol ${id} must include parent_id`);
@@ -49,6 +67,13 @@ export function validateIndex(index) {
     for (const [id, node] of Object.entries(nodes)) {
       if (SYMBOL_TYPES.has(node.type) && !nodes[node.parent_id]) errors.push(`symbol ${id} references a missing parent_id`);
     }
+  }
+  if (Array.isArray(index.generated?.git_changes)) {
+    index.generated.git_changes.forEach((change, i) => {
+      if (!isObject(change) || typeof change.path !== "string" || !change.path || !validGitState(change)) {
+        errors.push(`git change ${i} must include a path and valid git state`);
+      }
+    });
   }
   if (Array.isArray(edges) && isObject(nodes)) {
     const seen = new Set();
