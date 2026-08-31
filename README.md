@@ -11,8 +11,7 @@ npm install
 npm test
 node bin/repoaxis doctor
 node bin/repoaxis build
-node bin/repoaxis validate
-node bin/repoaxis find parseConfig
+node bin/repoaxis context parseConfig
 ```
 
 When published as the `repoaxis` npm package:
@@ -20,7 +19,17 @@ When published as the `repoaxis` npm package:
 ```bash
 npx repoaxis doctor
 npx repoaxis build
-npx repoaxis find parseConfig
+npx repoaxis context parseConfig
+npx repoaxis why parseConfig
+```
+
+A focused agent workflow is:
+
+```text
+repoaxis find TARGET       # only when the target is not already known
+repoaxis context TARGET
+repoaxis why TARGET        # when dependency provenance matters
+read only the indicated source file/range
 ```
 
 ## Distribution surfaces
@@ -46,10 +55,12 @@ repoaxis refs
 repoaxis parents
 repoaxis children
 repoaxis changed
+repoaxis context
+repoaxis why
 repoaxis doctor
 repoaxis node-id
 ```
 
-Query commands read the current `.repoaxis.json` snapshot and emit compact JSON. They do not refresh the index automatically.
+Query commands read the current `.repoaxis.json` snapshot and emit compact JSON. They do not refresh the index automatically. `context` combines structural, Git, commit, change, and annotation evidence without embedding source text. `why` reports bounded paths from the canonical graph and does not infer runtime entry points or function calls.
 
 See `docs/cli.md` and `docs/installation.md`.
