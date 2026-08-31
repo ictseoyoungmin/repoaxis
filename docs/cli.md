@@ -2,7 +2,7 @@
 
 ## Index selection
 
-Structural query commands read the current index snapshot. By default Repoaxis resolves the Git root from the current directory and reads `<git-root>/.repoaxis.json`. Use `--index FILE` to query another index. Query commands do not refresh the index automatically.
+Structural query and annotation commands operate on the current index snapshot. By default Repoaxis resolves the Git root from the current directory and reads `<git-root>/.repoaxis.json`. Use `--index FILE` to operate on another index. These commands do not refresh the index automatically.
 
 ## Commands
 
@@ -52,6 +52,21 @@ Explains bounded structural provenance using only indexed `imports` and `contain
 
 A path may start at an indexed file with no incoming `imports` edge. Repoaxis reports that as a structural origin rule only; it does not infer that the file is a runtime entry point. Cycles or depth limits can produce no complete upstream path, in which case direct `imported_by` evidence remains available.
 
+### `repoaxis note TARGET [TEXT...] [--clear] [--index FILE]`
+Reads, writes, or clears one durable `agent_note`.
+
+- With no text, reads the current annotation for `TARGET`.
+- With text, resolves a current node and sets or replaces its note. New notes are trimmed and limited to 8192 characters.
+- With `--clear`, removes the note. An orphaned annotation can be cleared by supplying its exact stored node ID.
+- Setting a note requires a currently resolvable, unambiguous node. Missing or ambiguous targets fail instead of creating detached memory.
+
+Annotation mutation validates the index before writing and replaces the index file atomically. It changes only the `annotations` section; generated structure remains derived state.
+
+### `repoaxis notes [--index FILE]`
+Lists all stored annotations in deterministic node-ID order. Each entry includes `orphaned: true` when its node no longer exists in the current generated graph.
+
+Orphaned notes are preserved intentionally so a rebuild or temporary structural change cannot silently destroy user/agent-authored memory. Review and clear them explicitly when they are stale.
+
 ### `repoaxis node-id TYPE PATH [QUALIFIED_NAME]`
 Produces the canonical deterministic node ID for a folder, file, class, or function.
 
@@ -70,4 +85,8 @@ repoaxis refs src/config.js
 repoaxis parents src/config.js:parseConfig
 repoaxis children src/config.js
 repoaxis changed --staged
+repoaxis note src/config.js:parseConfig "Configuration boundary used by the CLI."
+repoaxis note src/config.js:parseConfig
+repoaxis notes
+repoaxis note function:src/config.js::parseConfig --clear
 ```
