@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const required = [
+  ".agents/plugins/marketplace.json",
   ".codex-plugin/plugin.json",
   ".claude-plugin/plugin.json",
   "skills/repoaxis/SKILL.md",
@@ -23,17 +24,34 @@ for (const rel of required) {
   if (!fs.existsSync(path.join(root, rel))) throw new Error(`missing required path: ${rel}`);
 }
 const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+const marketplace = JSON.parse(fs.readFileSync(path.join(root, ".agents/plugins/marketplace.json"), "utf8"));
 const codex = JSON.parse(fs.readFileSync(path.join(root, ".codex-plugin/plugin.json"), "utf8"));
 const claude = JSON.parse(fs.readFileSync(path.join(root, ".claude-plugin/plugin.json"), "utf8"));
 const { REPOAXIS_VERSION } = await import(pathToFileURL(path.join(root, "skills/repoaxis/lib/indexer.mjs")));
 const { JAVASCRIPT_PARSER } = await import(pathToFileURL(path.join(root, "skills/repoaxis/lib/languages/javascript.mjs")));
 if (pkg.name !== "repoaxis" || pkg.bin?.repoaxis !== "./bin/repoaxis") throw new Error("package CLI contract is invalid");
+if (pkg.repository?.url !== "git+https://github.com/ictseoyoungmin/repoaxis.git") throw new Error("npm repository metadata is invalid");
+if (!pkg.files?.includes(".agents/plugins/")) throw new Error("npm package must include the plugin marketplace");
 if (REPOAXIS_VERSION !== pkg.version) throw new Error("runtime version mismatch");
 for (const manifest of [codex, claude]) {
   if (manifest.name !== "repoaxis") throw new Error("plugin name mismatch");
   if (manifest.version !== pkg.version) throw new Error("plugin version mismatch");
 }
 if (codex.skills !== "./skills/") throw new Error("Codex skills path must be ./skills/");
+if (marketplace.name !== "repoaxis" || marketplace.interface?.displayName !== "Repoaxis") {
+  throw new Error("marketplace identity is invalid");
+}
+if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length !== 1) {
+  throw new Error("marketplace must expose exactly one Repoaxis plugin");
+}
+const entry = marketplace.plugins[0];
+if (entry.name !== "repoaxis" || entry.source?.source !== "local" || entry.source?.path !== "./") {
+  throw new Error("marketplace Repoaxis source must resolve to the repository root");
+}
+if (entry.policy?.installation !== "AVAILABLE" || entry.policy?.authentication !== "ON_INSTALL") {
+  throw new Error("marketplace policy is invalid");
+}
+if (entry.category !== "Developer Tools") throw new Error("marketplace category is invalid");
 if (JAVASCRIPT_PARSER.name !== "acorn" || JAVASCRIPT_PARSER.version !== "8.15.0") {
   throw new Error("JavaScript parser pin is invalid");
 }
