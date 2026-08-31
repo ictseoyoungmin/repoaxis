@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0 — 2026-08-31
+
+- Added `context` to compose a focused agent packet from the resolved node, source location, containment, file Git state and last commit, matching working-tree change, annotations, and repository-local dependency projections.
+- Added `why` to explain bounded structural provenance using only canonical `imports` and `contains` edges.
+- Added deterministic upstream path traversal with configurable depth/path limits and explicit ambiguity handling inherited from the query layer.
+- Kept source text out of context responses so agents can use structural evidence to narrow the next source read instead of receiving another broad dump.
+- Explicitly avoid treating files with no incoming indexed imports as runtime entry points; they are only structural origins for `why` paths.
+- Added integration coverage for context composition, Git/change/annotation inclusion, structural path evidence, and CLI JSON output.
+
 ## 0.7.0 — 2026-08-31
 
 - Added compact structural query commands: `find`, `show`, `refs`, `parents`, `children`, and `changed`.
