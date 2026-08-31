@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0 — 2026-08-31
+
+- Added query-time freshness checks for the default `.repoaxis.json` without introducing an always-on daemon.
+- Added `generated.refresh.fingerprint` derived from the Repoaxis version, Git HEAD/ref, working-tree status, dirty/untracked file content, and staged index state.
+- Default operational query and annotation commands now rebuild automatically when the index is missing or stale.
+- Continued edits to an already-modified file are detected by content hash even when Git status text remains unchanged.
+- Re-staging different content is detected through staged index-state hashing.
+- Passing `--index FILE` now explicitly selects snapshot mode and disables automatic refresh for reproducible fixtures and exported indexes.
+- Excluded the generated index path from freshness fingerprints so builds and annotation edits do not cause self-triggered refresh loops.
+- Switched generated index writes to atomic replacement and added real-Git integration coverage for HEAD, dirty content, staged content, snapshot mode, and deterministic self-exclusion.
+
 ## 0.9.0 — 2026-08-31
 
 - Added `note` to read, set, replace, and explicitly clear durable `agent_note` annotations through the validated index instead of manual JSON editing.
