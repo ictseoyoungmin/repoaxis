@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { agentContext, whyNode } from "../../../skills/repoaxis/lib/agent-context.mjs";
 import { setAnnotation } from "../../../skills/repoaxis/lib/annotations.mjs";
 import { unreferencedCandidates } from "../../../skills/repoaxis/lib/candidates.mjs";
@@ -13,11 +14,21 @@ import { stableStringify } from "../../../skills/repoaxis/lib/stable-json.mjs";
 import { startViewer } from "../../../skills/repoaxis/lib/view-server.mjs";
 import { DOGFOOD_FILE_COUNT, materializeDogfoodRepository } from "../../fixtures/dogfood-js/create-fixture.mjs";
 
+const repoaxisCli = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../skills/repoaxis/scripts/cli.mjs");
+
 function git(root, ...args) {
   return execFileSync("git", ["-C", root, ...args], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
+}
+
+function cli(root, ...args) {
+  return JSON.parse(execFileSync(process.execPath, [repoaxisCli, ...args], {
+    cwd: root,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim());
 }
 
 function createDogfoodRepo() {
@@ -61,6 +72,10 @@ test("representative repository proves agent narrowing, conservative candidates,
   assert.ok(candidateIds.has("file:src/cli.js"));
   assert.ok(candidateIds.has("file:src/server.js"));
   assert.ok(candidateIds.has("file:scripts/migrate.js"));
+
+  const cliCandidates = cli(root, "unreferenced");
+  assert.equal(cliCandidates.basis, candidates.basis);
+  assert.ok(cliCandidates.candidates.some((entry) => entry.node.id === "file:scripts/migrate.js"));
 
   const indexPath = path.join(root, ".repoaxis.json");
   setAnnotation(indexPath, "scripts/migrate.js", "Invoked by the package.json migrate script; not a dead-code finding.");
