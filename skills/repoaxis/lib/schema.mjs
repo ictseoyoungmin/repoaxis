@@ -1,10 +1,10 @@
-import { MAX_AGENT_NOTE_CHARS } from "./annotations.mjs";
 import { isSupportedNodeType } from "./node-id.mjs";
 
 const EDGE_TYPES = new Set(["contains", "imports"]);
 const SYMBOL_TYPES = new Set(["class", "function"]);
 const WORKING_STATES = new Set(["clean", "modified", "added", "deleted", "renamed", "copied", "type-changed", "untracked", "conflicted"]);
 const STAGED_STATES = new Set(["modified", "added", "deleted", "renamed", "copied", "type-changed", "conflicted"]);
+const MAX_AGENT_NOTE_CHARS = 8192;
 
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
