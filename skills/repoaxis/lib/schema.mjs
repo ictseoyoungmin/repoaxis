@@ -19,6 +19,17 @@ function validSourceRange(source) {
   return typeof source.signature === "string" && source.signature.length > 0;
 }
 
+function validLastCommit(commit) {
+  if (commit === null) return true;
+  if (!isObject(commit)) return false;
+  if (typeof commit.sha !== "string" || !/^[0-9a-f]{40}$/.test(commit.sha)) return false;
+  if (typeof commit.author_name !== "string") return false;
+  if (typeof commit.authored_at !== "string" || !commit.authored_at) return false;
+  if (typeof commit.committed_at !== "string" || !commit.committed_at) return false;
+  if (typeof commit.subject !== "string") return false;
+  return true;
+}
+
 function validGitState(state) {
   if (!isObject(state)) return false;
   if (typeof state.tracked !== "boolean" || typeof state.conflicted !== "boolean") return false;
@@ -28,6 +39,7 @@ function validGitState(state) {
   if (state.copy_from != null && (typeof state.copy_from !== "string" || !state.copy_from)) return false;
   if (state.similarity != null && (!Number.isInteger(state.similarity) || state.similarity < 0 || state.similarity > 100)) return false;
   if (state.conflict_code != null && (typeof state.conflict_code !== "string" || state.conflict_code.length !== 2)) return false;
+  if (state.last_commit !== undefined && !validLastCommit(state.last_commit)) return false;
   return true;
 }
 
@@ -70,8 +82,8 @@ export function validateIndex(index) {
   }
   if (Array.isArray(index.generated?.git_changes)) {
     index.generated.git_changes.forEach((change, i) => {
-      if (!isObject(change) || typeof change.path !== "string" || !change.path || !validGitState(change)) {
-        errors.push(`git change ${i} must include a path and valid git state`);
+      if (!isObject(change) || typeof change.path !== "string" || !change.path || !validGitState(change) || change.last_commit !== undefined) {
+        errors.push(`git change ${i} must include a path and valid working-tree git state`);
       }
     });
   }
