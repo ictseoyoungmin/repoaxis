@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.12.0 — 2026-08-31
+
+- Added `repoaxis unreferenced` as a conservative JavaScript file projection for nodes with no incoming repository-local `imports` edge; the output explicitly warns that candidates are not dead-code findings.
+- Moved default-repository annotation durability under Git metadata (`repoaxis/annotations.json` resolved through `git rev-parse --git-path`) while continuing to project notes into `.repoaxis.json` for consumers.
+- Deleting and rebuilding `.repoaxis.json` now preserves repository annotations instead of coupling authored memory to disposable generated state.
+- Added a 38-file representative JavaScript dogfood repository with CLI/server entry paths, circular imports, package-script runtime entries, workers, and realistic service/repository/storage layers.
+- Added end-to-end dogfood coverage proving `context` / `why` narrow a target to a small provenance path instead of broad repository reads, then remain correct through modified, staged, untracked, and deleted working-tree states.
+- Added viewer dogfood against the representative repository and verified annotations remain visible after refresh and index recreation.
+- Added packed npm installation coverage that installs the produced tarball, runs the installed CLI, verifies Codex/Claude skill surfaces, and confirms `dev/` assets are excluded from distribution.
+
 ## 0.11.0 — 2026-08-31
 
 - Added `repoaxis view` as a read-only localhost human surface bound to `127.0.0.1`.
