@@ -45,7 +45,9 @@ export function validateReleaseContract(root, { tag = null } = {}) {
     throw new Error("plugin manifest versions must match package.json");
   }
   const plugin = marketplace.plugins?.find((entry) => entry.name === "repoaxis");
-  if (!plugin || plugin.source !== "./") throw new Error("marketplace must expose repoaxis from repository root");
+  if (!plugin || plugin.source?.source !== "local" || plugin.source?.path !== "./") {
+    throw new Error("marketplace must expose repoaxis from repository root");
+  }
   const releaseTag = expectedTag(pkg.version);
   if (tag !== null && tag !== releaseTag) throw new Error(`release tag ${tag} does not match package version ${releaseTag}`);
   const notes = extractReleaseNotes(changelog, pkg.version);
