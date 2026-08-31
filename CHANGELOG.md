@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0 — 2026-08-31
+
+- Added exact current-path last-file-commit context for tracked file nodes.
+- Added commit SHA, author name, authored time, committed time, and subject without copying full Git history into `.repoaxis.json`.
+- Kept untracked and not-yet-committed staged-added paths explicit with `last_commit: null`.
+- Kept uncommitted rename semantics exact: the new path does not inherit the old path's commit as if it were already committed.
+- Extended schema v1 compatibly with optional `file-node.git.last_commit` validation.
+- Added real-Git integration coverage for distinct file histories, dirty tracked files, new staged files, untracked files, renames, and deterministic rebuilds.
+
 ## 0.5.0 — 2026-08-31
 
 - Added exact file-level Git state from porcelain v2 for clean, modified, added, deleted, renamed, copied, untracked, staged, type-changed, and conflicted paths.
