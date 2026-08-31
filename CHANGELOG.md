@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 — 2026-08-31
+
+- Added deterministic folder/file indexing rooted at `folder:.`.
+- Added canonical `contains` edges for the current filesystem hierarchy.
+- Added Git-aware discovery of tracked and visible untracked files while respecting standard ignore rules.
+- Excluded deleted tracked paths from the current working-tree projection.
+- Added deterministic file metadata for byte size, extension, and symlink state.
+- Added filesystem hierarchy, ignore, untracked-file, and deleted-file integration coverage.
+
 ## 0.1.0 — 2026-08-31
 
 - Added npm CLI entrypoint and plugin manifests for Codex and Claude Code.

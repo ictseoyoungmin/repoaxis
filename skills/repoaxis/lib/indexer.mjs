@@ -1,16 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import { readPreservedAnnotations } from "./annotations.mjs";
-import { createEmptyGraph } from "./graph.mjs";
+import { buildFilesystemGraph } from "./filesystem.mjs";
 import { readHead, resolveGitRoot } from "./git.mjs";
 import { createRefreshRecord } from "./refresh.mjs";
 import { stableStringify } from "./stable-json.mjs";
 
-export const REPOAXIS_VERSION = "0.1.0";
+export const REPOAXIS_VERSION = "0.2.0";
 
-export function createBootstrapIndex(root, { reason = "manual", annotations = {} } = {}) {
+export function createIndex(root, { reason = "manual", annotations = {}, excludePaths = [] } = {}) {
   const head = readHead(root);
-  const graph = createEmptyGraph();
+  const graph = buildFilesystemGraph(root, { excludePaths });
   return {
     schema_version: 1,
     tool: { name: "repoaxis", version: REPOAXIS_VERSION },
@@ -33,7 +33,10 @@ export function buildIndex({ root = process.cwd(), output = null, reason = "manu
   const gitRoot = resolveGitRoot(root);
   const outputPath = path.resolve(output ?? path.join(gitRoot, ".repoaxis.json"));
   const annotations = readPreservedAnnotations(outputPath);
-  const index = createBootstrapIndex(gitRoot, { reason, annotations });
+  const relativeOutput = path.relative(gitRoot, outputPath);
+  const outputInsideRepository = relativeOutput && !relativeOutput.startsWith(`..${path.sep}`) && relativeOutput !== ".." && !path.isAbsolute(relativeOutput);
+  const excludePaths = outputInsideRepository ? [relativeOutput.replaceAll(path.sep, "/")] : [];
+  const index = createIndex(gitRoot, { reason, annotations, excludePaths });
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, stableStringify(index), "utf8");
   return { root: gitRoot, output: outputPath, index };

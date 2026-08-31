@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 
 function git(root, args, { allowFailure = false } = {}) {
@@ -29,4 +30,21 @@ export function readHead(root) {
 
 export function gitVersion() {
   return execFileSync("git", ["--version"], { encoding: "utf8" }).trim();
+}
+
+export function listWorkingTreeFiles(root) {
+  const output = git(root, ["ls-files", "-z", "--cached", "--others", "--exclude-standard"]) ?? "";
+  const files = output
+    .split("\0")
+    .filter(Boolean)
+    .filter((repoPath) => {
+      const absolute = path.join(root, ...repoPath.split("/"));
+      try {
+        const stat = fs.lstatSync(absolute);
+        return stat.isFile() || stat.isSymbolicLink();
+      } catch {
+        return false;
+      }
+    });
+  return [...new Set(files)].sort();
 }
