@@ -1,3 +1,4 @@
+import { MAX_AGENT_NOTE_CHARS } from "./annotations.mjs";
 import { isSupportedNodeType } from "./node-id.mjs";
 
 const EDGE_TYPES = new Set(["contains", "imports"]);
@@ -43,13 +44,19 @@ function validGitState(state) {
   return true;
 }
 
+function validAnnotation(annotation) {
+  return isObject(annotation)
+    && Object.keys(annotation).every((key) => key === "agent_note")
+    && typeof annotation.agent_note === "string"
+    && annotation.agent_note.trim().length > 0
+    && annotation.agent_note.length <= MAX_AGENT_NOTE_CHARS;
+}
+
 export function validateIndex(index) {
   const errors = [];
   if (!isObject(index)) return { ok: false, errors: ["index must be an object"] };
   if (index.schema_version !== 1) errors.push("schema_version must be 1");
-  if (!isObject(index.tool) || index.tool.name !== "repoaxis" || typeof index.tool.version !== "string") {
-    errors.push("tool must identify repoaxis and include a version");
-  }
+  if (!isObject(index.tool) || index.tool.name !== "repoaxis" || typeof index.tool.version !== "string") errors.push("tool must identify repoaxis and include a version");
   if (index.authority !== "git+working-tree") errors.push("authority must be git+working-tree");
   if (!isObject(index.repository) || index.repository.root !== ".") errors.push("repository.root must be '.'");
   if (!isObject(index.generated)) errors.push("generated must be an object");
@@ -57,12 +64,8 @@ export function validateIndex(index) {
   const edges = index.generated?.edges;
   if (!isObject(nodes)) errors.push("generated.nodes must be an object");
   if (!Array.isArray(edges)) errors.push("generated.edges must be an array");
-  if (index.generated?.git_changes != null && !Array.isArray(index.generated.git_changes)) {
-    errors.push("generated.git_changes must be an array when present");
-  }
-  if (!isObject(index.generated?.refresh) || typeof index.generated.refresh.reason !== "string") {
-    errors.push("generated.refresh.reason must be a string");
-  }
+  if (index.generated?.git_changes != null && !Array.isArray(index.generated.git_changes)) errors.push("generated.git_changes must be an array when present");
+  if (!isObject(index.generated?.refresh) || typeof index.generated.refresh.reason !== "string") errors.push("generated.refresh.reason must be a string");
   if (isObject(nodes)) {
     for (const [id, node] of Object.entries(nodes)) {
       if (!isObject(node)) { errors.push(`node ${id} must be an object`); continue; }
@@ -76,15 +79,11 @@ export function validateIndex(index) {
         if (!validSourceRange(node.source)) errors.push(`symbol ${id} must include a valid source range and signature`);
       }
     }
-    for (const [id, node] of Object.entries(nodes)) {
-      if (SYMBOL_TYPES.has(node.type) && !nodes[node.parent_id]) errors.push(`symbol ${id} references a missing parent_id`);
-    }
+    for (const [id, node] of Object.entries(nodes)) if (SYMBOL_TYPES.has(node.type) && !nodes[node.parent_id]) errors.push(`symbol ${id} references a missing parent_id`);
   }
   if (Array.isArray(index.generated?.git_changes)) {
     index.generated.git_changes.forEach((change, i) => {
-      if (!isObject(change) || typeof change.path !== "string" || !change.path || !validGitState(change) || change.last_commit !== undefined) {
-        errors.push(`git change ${i} must include a path and valid working-tree git state`);
-      }
+      if (!isObject(change) || typeof change.path !== "string" || !change.path || !validGitState(change) || change.last_commit !== undefined) errors.push(`git change ${i} must include a path and valid working-tree git state`);
     });
   }
   if (Array.isArray(edges) && isObject(nodes)) {
@@ -98,5 +97,6 @@ export function validateIndex(index) {
     });
   }
   if (!isObject(index.annotations)) errors.push("annotations must be an object");
+  else for (const [id, annotation] of Object.entries(index.annotations)) if (!validAnnotation(annotation)) errors.push(`annotation ${id} must contain one non-empty agent_note within ${MAX_AGENT_NOTE_CHARS} characters`);
   return { ok: errors.length === 0, errors };
 }
