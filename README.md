@@ -12,8 +12,8 @@ Default operational commands keep `.repoaxis.json` current on demand. Before ans
 npm install
 npm test
 node bin/repoaxis doctor
-node bin/repoaxis build
 node bin/repoaxis context parseConfig
+node bin/repoaxis view
 ```
 
 When published as the `repoaxis` npm package:
@@ -23,7 +23,10 @@ npx repoaxis doctor
 npx repoaxis context parseConfig
 npx repoaxis why parseConfig
 npx repoaxis note parseConfig "Configuration boundary used by the CLI."
+npx repoaxis view
 ```
+
+`repoaxis view` starts a read-only structural viewer on `127.0.0.1`. It shows the canonical folder/file/class/function tree, Git status and last-file commit context, stored annotations, repository-local imports and reverse imports, and a bounded dependency graph. The browser polls the local viewer API while open, and the API reuses Repoaxis freshness checks so the view follows the working tree without an always-on daemon.
 
 A focused agent workflow is:
 
@@ -51,6 +54,7 @@ The runtime implementation exists once under `skills/repoaxis/`; the package ent
 
 ```text
 repoaxis build
+repoaxis view
 repoaxis validate
 repoaxis summary
 repoaxis find
@@ -71,6 +75,6 @@ Operational query and annotation commands refresh the default `.repoaxis.json` w
 
 `note` and `notes` provide the persistent memory surface. New notes can only be attached to a current resolved node; rebuilds preserve them. If a node later disappears, the annotation is retained and reported as orphaned until it is explicitly cleared by exact node ID.
 
-Use `--index FILE` on operational commands when you intentionally want to query or mutate an explicit snapshot without automatic refresh.
+Use `--index FILE` on operational commands when you intentionally want to query or mutate an explicit snapshot without automatic refresh. The human viewer intentionally follows only the default current repository index and is read-only.
 
-See `docs/cli.md` and `docs/installation.md`.
+See `docs/cli.md`, `docs/viewer.md`, and `docs/installation.md`.
