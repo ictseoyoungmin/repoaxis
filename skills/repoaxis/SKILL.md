@@ -1,6 +1,6 @@
 ---
 name: repoaxis
-description: Use Repoaxis to build, validate, and query a local Git-aware repository structural index before broad repository exploration. Use when locating code, inspecting structural relationships, checking Git working-tree state or file commit context, preparing focused repository context, preserving non-obvious repository knowledge for later coding-agent sessions, or opening the local human structure viewer.
+description: Use Repoaxis to build, validate, and query a local Git-aware repository structural index before broad repository exploration. Use when locating code, inspecting structural relationships, checking Git working-tree state or file commit context, preparing focused repository context, preserving non-obvious repository knowledge for later coding-agent sessions, identifying conservative unreferenced candidates, or opening the local human structure viewer.
 ---
 
 # Repoaxis
@@ -15,7 +15,7 @@ Repoaxis provides a local, rebuildable structural index for a Git repository. Tr
 4. Never treat `.repoaxis.json` as the source of truth for code or Git state.
 5. Record durable, non-obvious architectural or runtime knowledge with `note TARGET ...`; do not put transient scratch thoughts in annotations.
 6. Clear a stale annotation explicitly rather than editing generated graph data or allowing a rebuild to silently discard it.
-7. Do not classify an unreferenced node as dead code without runtime or framework evidence.
+7. Use `unreferenced` only as a candidate list. No incoming repository import does not mean dead code; CLI, migration, framework, configuration, fixture, plugin, or runtime entry paths may still require the file.
 8. Treat `refs` and `why` as canonical graph evidence only; they do not imply function-call or runtime-entry analysis.
 9. Read only the source needed to answer the current task after structural context narrows the scope.
 10. Use only commands exposed by `repoaxis help` for the installed version.
@@ -34,6 +34,7 @@ repoaxis parents src/config.js:parseConfig
 repoaxis children src/config.js
 repoaxis changed
 repoaxis changed --staged
+repoaxis unreferenced
 repoaxis note src/config.js:parseConfig "Configuration boundary used by the CLI entry path."
 repoaxis note src/config.js:parseConfig
 repoaxis notes
@@ -43,7 +44,7 @@ repoaxis summary
 repoaxis doctor
 ```
 
-`repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. It indexes the current folder/file hierarchy using standard Git ignore behavior, extracts JavaScript class/function symbols with source ranges and signatures, records repository-local JavaScript dependencies as canonical `imports` edges, attaches exact Git working/staged state to current file nodes, and records the exact last commit that mentions each current tracked file path. Changes whose paths are absent from the current working tree, such as deletions, remain visible through `generated.git_changes`. The generated index is rebuildable; annotations are preserved across rebuilds.
+`repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. It indexes the current folder/file hierarchy using standard Git ignore behavior, extracts JavaScript class/function symbols with source ranges and signatures, records repository-local JavaScript dependencies as canonical `imports` edges, attaches exact Git working/staged state to current file nodes, and records the exact last commit that mentions each current tracked file path. Changes whose paths are absent from the current working tree, such as deletions, remain visible through `generated.git_changes`.
 
 Operational query and annotation commands automatically refresh the default `.repoaxis.json` when the index is missing, the installed Repoaxis version changed, Git HEAD/ref changed, or relevant working-tree/staged content changed. Passing `--index FILE` explicitly selects a snapshot and disables automatic refresh for that command.
 
@@ -69,6 +70,12 @@ repoaxis note TARGET ...   # only when durable non-obvious context was learned
 
 `why` returns bounded paths composed only from indexed `imports` and `contains` edges. A path may begin at a file with no incoming indexed imports, but that file is not inferred to be a runtime entry point.
 
+## Unreferenced candidates
+
+`repoaxis unreferenced` returns JavaScript file nodes with no incoming repository-local `imports` edge. The result is intentionally labeled with the basis `no-incoming-repository-imports` and a caution that it is not a dead-code finding.
+
+Use runtime, framework, package-script, configuration, plugin, fixture, migration, or other evidence before deciding whether a candidate is removable. Add a durable note when a candidate has a non-obvious runtime role.
+
 ## Annotation workflow
 
 Annotations are durable agent/user-authored memory and are separate from generated structure.
@@ -78,6 +85,7 @@ Annotations are durable agent/user-authored memory and are separate from generat
 - `repoaxis notes` lists annotations and marks entries whose node is no longer present as orphaned.
 - `repoaxis note NODE_ID --clear` can remove an orphaned annotation by its exact stored node ID.
 - A new note can only be attached to a node that resolves in the current index.
+- Default-repository notes are durably stored under Git metadata and projected into `.repoaxis.json`; deleting and rebuilding the derived index does not delete those notes.
 - Rebuilding the index preserves valid annotations; it does not treat them as generated data.
 
 Keep annotations concise and factual. Prefer facts that will materially reduce future repository exploration, such as framework registration, runtime entry behavior, compatibility constraints, or a non-obvious architectural boundary.
@@ -95,7 +103,7 @@ Commands that accept `TARGET` recognize, in order, an exact node ID, an exact re
 - Exact current-path file commit context: `file-node.git.last_commit`.
 - Changed paths, including absent deletions: `generated.git_changes`.
 - Refresh fingerprint: `generated.refresh.fingerprint`.
-- Persistent notes: `annotations`.
+- Persistent notes: projected under `annotations`; default-repository durable storage lives under Git metadata.
 - Canonical edge directions are stored once; reverse relationships such as imported-by are derived by consumers.
 - Paths in the index use repository-relative POSIX form.
 - Git state is data; any color or badge is a UI projection of that data.
@@ -115,4 +123,4 @@ Use `repoaxis node-id` when another tool needs the canonical encoding rather tha
 
 ## Output handling
 
-`find`, `refs`, `parents`, `children`, and `changed` return compact projections intended for agents and shell tools. `show` returns the full indexed node plus its persistent annotation. `context` returns a focused agent packet without source text, and `why` returns bounded structural evidence paths. `note` and `notes` mutate or inspect only the annotation section of a validated index. `view` is a read-only localhost projection of the same current index. Validate the index before relying on it if the file may have been edited manually. Use `--index FILE` when you intentionally need a fixed historical or test snapshot instead of current repository state.
+`find`, `refs`, `parents`, `children`, `changed`, and `unreferenced` return compact projections intended for agents and shell tools. `show` returns the full indexed node plus its persistent annotation. `context` returns a focused agent packet without source text, and `why` returns bounded structural evidence paths. `note` and `notes` mutate or inspect authored annotation memory. `view` is a read-only localhost projection of the same current index. Validate the index before relying on it if the file may have been edited manually. Use `--index FILE` when you intentionally need a fixed historical or test snapshot instead of current repository state.
