@@ -4,6 +4,14 @@
   "description": "Git-aware structural index for coding agents and humans.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ictseoyoungmin/repoaxis.git"
+  },
+  "homepage": "https://github.com/ictseoyoungmin/repoaxis#readme",
+  "bugs": {
+    "url": "https://github.com/ictseoyoungmin/repoaxis/issues"
+  },
   "engines": {
     "node": ">=20"
   },
@@ -11,6 +19,7 @@
     "repoaxis": "./bin/repoaxis"
   },
   "files": [
+    ".agents/plugins/",
     ".codex-plugin/",
     ".claude-plugin/",
     "bin/",
