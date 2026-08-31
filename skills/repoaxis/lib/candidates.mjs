@@ -1,12 +1,17 @@
-import { compactNode, importedBy } from "./query.mjs";
+import { compactNode } from "./query.mjs";
 
 const JAVASCRIPT_FILE = /\.(?:[cm]?js)$/i;
 
 export function unreferencedCandidates(index) {
   const annotations = index?.annotations ?? {};
+  const incoming = new Set(
+    (index?.generated?.edges ?? [])
+      .filter((edge) => edge.type === "imports")
+      .map((edge) => edge.to),
+  );
   const candidates = Object.values(index?.generated?.nodes ?? {})
     .filter((node) => node.type === "file" && JAVASCRIPT_FILE.test(node.path))
-    .filter((node) => importedBy(index, node.id).length === 0)
+    .filter((node) => !incoming.has(node.id))
     .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
     .map((node) => ({
       node: compactNode(node),
