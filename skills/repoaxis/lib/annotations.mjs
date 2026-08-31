@@ -13,7 +13,7 @@ function cleanAnnotations(value) {
     if (!annotation || typeof annotation !== "object" || Array.isArray(annotation)) continue;
     if (typeof annotation.agent_note !== "string") continue;
     const note = annotation.agent_note.trim();
-    if (!note || note.length > MAX_AGENT_NOTE_CHARS) continue;
+    if (!note) continue;
     output[nodeId] = { agent_note: note };
   }
   return output;
