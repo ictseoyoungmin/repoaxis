@@ -133,3 +133,26 @@ export function readWorkingTreeState(root) {
   const output = git(root, ["status", "--porcelain=v2", "-z", "--untracked-files=all", "--find-renames=50%"], { trim: false }) ?? "";
   return parseStatusPorcelainV2(output);
 }
+
+export function readLastFileCommit(root, repoPath) {
+  const output = git(root, [
+    "log",
+    "-1",
+    "--format=%H%x00%aN%x00%aI%x00%cI%x00%s",
+    "--",
+    repoPath,
+  ], { allowFailure: true, trim: false });
+  const value = (output ?? "").replace(/\n$/, "");
+  if (!value) return null;
+  const [sha, authorName, authoredAt, committedAt, subject] = value.split("\0");
+  if (!sha || authorName == null || !authoredAt || !committedAt || subject == null) {
+    throw new Error(`malformed last-file-commit record for ${repoPath}`);
+  }
+  return {
+    sha,
+    author_name: authorName,
+    authored_at: authoredAt,
+    committed_at: committedAt,
+    subject,
+  };
+}
