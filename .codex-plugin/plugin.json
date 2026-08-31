@@ -1,6 +1,6 @@
 {
   "name": "repoaxis",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Git-aware structural indexing for repository navigation by coding agents and humans.",
   "license": "MIT",
   "keywords": [

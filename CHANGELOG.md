@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11.0 — 2026-08-31
+
+- Added `repoaxis view` as a read-only localhost human surface bound to `127.0.0.1`.
+- Replaced the original file-upload summary page with a live structural viewer for folder/file/class/function containment, Git state, source signatures, annotations, imports, reverse imports, and a bounded file dependency graph.
+- Reused query-time freshness through `/api/index` so the open viewer follows HEAD and working-tree changes without an always-on daemon or second repository model.
+- Added a bounded reverse-dependency tree and a focused graph fallback for repositories with more than 80 indexed files instead of drawing an unreadable whole-repository graph.
+- Kept all viewer endpoints read-only; annotation mutation remains explicit through the existing CLI.
+- Added loopback server tests, fresh-index integration coverage, non-GET/404 checks, and compile-time validation of the bundled browser script.
+- Added `docs/viewer.md` and distribution validation for the viewer runtime/template.
+
 ## 0.10.0 — 2026-08-31
 
 - Added query-time freshness checks for the default `.repoaxis.json` without introducing an always-on daemon.
