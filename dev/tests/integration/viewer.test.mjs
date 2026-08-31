@@ -3,8 +3,11 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { startViewer } from "../../../skills/repoaxis/lib/view-server.mjs";
+
+const VIEWER_HTML = fileURLToPath(new URL("../../../skills/repoaxis/viewer/repoaxis.html", import.meta.url));
 
 function git(root, ...args) {
   return execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
@@ -22,6 +25,13 @@ function createRepo() {
   git(root, "commit", "-qm", "fixture");
   return root;
 }
+
+test("viewer client script compiles without browser execution", () => {
+  const html = fs.readFileSync(VIEWER_HTML, "utf8");
+  const match = html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(match, "viewer script block is missing");
+  assert.doesNotThrow(() => new Function(match[1]));
+});
 
 test("viewer serves the structural UI and a fresh read-only index over loopback", async () => {
   const root = createRepo();
