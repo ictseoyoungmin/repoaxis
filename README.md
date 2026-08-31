@@ -2,7 +2,7 @@
 
 **Git-aware structural index for coding agents and humans.**
 
-Repoaxis is designed to let coding agents query repository structure before performing broad source scans, while giving humans a local view of the same structural state. Git plus the current working tree are authoritative; `.repoaxis.json` is a rebuildable derived index. `repoaxis build` materializes the deterministic folder/file hierarchy and, for JavaScript (`.js`, `.mjs`, `.cjs`), class/function symbols with canonical containment, source ranges, and signatures. Repository-local JavaScript imports are resolved into directional file-to-file `imports` edges without storing duplicated reverse edges.
+Repoaxis is designed to let coding agents query repository structure before performing broad source scans, while giving humans a local view of the same structural state. Git plus the current working tree are authoritative; `.repoaxis.json` is a rebuildable derived index. `repoaxis build` materializes the deterministic folder/file hierarchy and, for JavaScript (`.js`, `.mjs`, `.cjs`), class/function symbols with canonical containment, source ranges, and signatures. Repository-local JavaScript imports are resolved into directional file-to-file `imports` edges without storing duplicated reverse edges. Current file nodes also carry exact Git working/staged state, while `generated.git_changes` keeps changed paths such as deletions visible even when no current filesystem node exists.
 
 ## Quick start
 
