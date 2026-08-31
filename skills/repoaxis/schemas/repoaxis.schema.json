@@ -54,6 +54,18 @@
     }
   },
   "$defs": {
+    "commitContext": {
+      "type": "object",
+      "required": ["sha", "author_name", "authored_at", "committed_at", "subject"],
+      "additionalProperties": false,
+      "properties": {
+        "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "author_name": { "type": "string" },
+        "authored_at": { "type": "string", "minLength": 1 },
+        "committed_at": { "type": "string", "minLength": 1 },
+        "subject": { "type": "string" }
+      }
+    },
     "gitState": {
       "type": "object",
       "required": ["tracked", "working", "staged", "conflicted"],
@@ -71,7 +83,13 @@
         "rename_from": { "type": "string", "minLength": 1 },
         "copy_from": { "type": "string", "minLength": 1 },
         "similarity": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "conflict_code": { "type": "string", "minLength": 2, "maxLength": 2 }
+        "conflict_code": { "type": "string", "minLength": 2, "maxLength": 2 },
+        "last_commit": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/commitContext" }
+          ]
+        }
       }
     },
     "gitChange": {
