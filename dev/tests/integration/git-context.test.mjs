@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { buildIndex } from "../../../skills/repoaxis/lib/indexer.mjs";
+import { buildIndex, REPOAXIS_VERSION } from "../../../skills/repoaxis/lib/indexer.mjs";
 import { validateIndex } from "../../../skills/repoaxis/lib/schema.mjs";
 
 function git(root, args, env = {}) {
@@ -54,7 +54,7 @@ test("build attaches exact last commit to current tracked file paths", () => {
   write(root, "untracked.txt", "untracked\n");
 
   const first = buildIndex({ root }).index;
-  assert.equal(first.tool.version, "0.6.0");
+  assert.equal(first.tool.version, REPOAXIS_VERSION);
   assert.deepEqual(first.generated.nodes["file:a.txt"].git.last_commit, {
     sha: updateSha,
     author_name: "Repoaxis Test",
