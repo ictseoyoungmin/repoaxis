@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0 — 2026-08-31
+
+- Added `note` to read, set, replace, and explicitly clear durable `agent_note` annotations through the validated index instead of manual JSON editing.
+- Added `notes` to list annotations in deterministic node-ID order and identify orphaned memory whose node no longer exists in the generated graph.
+- New notes require a current unambiguous target; missing targets do not create detached annotations.
+- Orphaned annotations remain readable and clearable by exact stored node ID so rebuilds and temporary source changes cannot silently destroy authored memory.
+- Annotation mutations use atomic index-file replacement and leave generated graph data unchanged.
+- Kept schema version 1 backward-compatible rather than tightening the existing outer annotation contract for this release.
+- Added integration coverage for build → note → rebuild preservation → source removal → orphan inspection → explicit clear.
+
 ## 0.8.0 — 2026-08-31
 
 - Added `context` to compose a focused agent packet from the resolved node, source location, containment, file Git state and last commit, matching working-tree change, annotations, and repository-local dependency projections.
