@@ -5,7 +5,15 @@ import process from "node:process";
 import { buildIndex, REPOAXIS_VERSION } from "../lib/indexer.mjs";
 import { gitVersion, resolveGitRoot } from "../lib/git.mjs";
 import { makeNodeId } from "../lib/node-id.mjs";
-import { summarizeIndex } from "../lib/query.mjs";
+import {
+  changedPaths,
+  childrenOf,
+  findNodes,
+  parentsOf,
+  refsFor,
+  showNode,
+  summarizeIndex,
+} from "../lib/query.mjs";
 import { validateIndex } from "../lib/schema.mjs";
 
 function print(value) {
@@ -27,8 +35,39 @@ function takeOption(args, name, fallback = null) {
   return value;
 }
 
+function takeFlag(args, name) {
+  const index = args.indexOf(name);
+  if (index === -1) return false;
+  args.splice(index, 1);
+  return true;
+}
+
+function defaultIndexFile() {
+  try {
+    return path.join(resolveGitRoot(process.cwd()), ".repoaxis.json");
+  } catch {
+    return path.resolve(".repoaxis.json");
+  }
+}
+
+function readQueryIndex(fileArg = null) {
+  const file = path.resolve(fileArg ?? defaultIndexFile());
+  const index = JSON.parse(fs.readFileSync(file, "utf8"));
+  const validation = validateIndex(index);
+  if (!validation.ok) throw new Error(`invalid index: ${validation.errors.join("; ")}`);
+  return index;
+}
+
+function parsePositiveInteger(value, label) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed < 1 || String(parsed) !== String(value)) {
+    throw new Error(`${label} must be a positive integer`);
+  }
+  return parsed;
+}
+
 function help() {
-  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nThe repository and current working tree are authoritative. .repoaxis.json is rebuildable derived state.`;
+  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nQuery commands read the current index snapshot; they do not refresh it automatically. The repository and current working tree remain authoritative.`;
 }
 
 async function main() {
@@ -59,6 +98,32 @@ async function main() {
     }
     if (!validation.ok) throw new Error(`invalid index: ${validation.errors.join("; ")}`);
     return print(summarizeIndex(index));
+  }
+
+  if (command === "find") {
+    const indexFile = takeOption(args, "--index", null);
+    const limitValue = takeOption(args, "--limit", "20");
+    const query = args.shift();
+    if (!query || args.length) throw new Error("usage: repoaxis find QUERY [--index FILE] [--limit N]");
+    return print(findNodes(readQueryIndex(indexFile), query, { limit: parsePositiveInteger(limitValue, "--limit") }));
+  }
+
+  if (["show", "refs", "parents", "children"].includes(command)) {
+    const indexFile = takeOption(args, "--index", null);
+    const target = args.shift();
+    if (!target || args.length) throw new Error(`usage: repoaxis ${command} TARGET [--index FILE]`);
+    const index = readQueryIndex(indexFile);
+    if (command === "show") return print(showNode(index, target));
+    if (command === "refs") return print(refsFor(index, target));
+    if (command === "parents") return print(parentsOf(index, target));
+    return print(childrenOf(index, target));
+  }
+
+  if (command === "changed") {
+    const indexFile = takeOption(args, "--index", null);
+    const stagedOnly = takeFlag(args, "--staged");
+    if (args.length) throw new Error(`unexpected arguments: ${args.join(" ")}`);
+    return print(changedPaths(readQueryIndex(indexFile), { stagedOnly }));
   }
 
   if (command === "doctor") {

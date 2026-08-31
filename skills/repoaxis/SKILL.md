@@ -1,6 +1,6 @@
 ---
 name: repoaxis
-description: Use Repoaxis to build, validate, and inspect a local Git-aware repository structural index before broad repository exploration. Use when checking repository structure, index health, Git working-tree state, file commit context, or preparing focused repository context for a coding task.
+description: Use Repoaxis to build, validate, and query a local Git-aware repository structural index before broad repository exploration. Use when locating code, inspecting structural relationships, checking Git working-tree state or file commit context, and preparing focused repository context for a coding task.
 ---
 
 # Repoaxis
@@ -10,24 +10,37 @@ Repoaxis provides a local, rebuildable structural index for a Git repository. Tr
 ## Operating rules
 
 1. Prefer Repoaxis before broad repository scans when an index is available.
-2. Never treat `.repoaxis.json` as the source of truth for code or Git state.
-3. Preserve annotations when rebuilding the generated index.
-4. Do not classify an unreferenced node as dead code without runtime or framework evidence.
-5. Read only the source needed to answer the current task after structural context narrows the scope.
-6. Use only commands exposed by `repoaxis help` for the installed version.
+2. Use `find`, `show`, and structural traversal commands to narrow source reads before opening files broadly.
+3. Never treat `.repoaxis.json` as the source of truth for code or Git state.
+4. Preserve annotations when rebuilding the generated index.
+5. Do not classify an unreferenced node as dead code without runtime or framework evidence.
+6. Treat `refs` as canonical graph adjacency only; it does not imply function call analysis.
+7. Read only the source needed to answer the current task after structural context narrows the scope.
+8. Use only commands exposed by `repoaxis help` for the installed version.
 
 ## Core commands
 
 ```bash
-repoaxis doctor
 repoaxis build
+repoaxis find parseConfig
+repoaxis show src/config.js:parseConfig
+repoaxis refs src/config.js
+repoaxis parents src/config.js:parseConfig
+repoaxis children src/config.js
+repoaxis changed
+repoaxis changed --staged
 repoaxis validate
 repoaxis summary
-repoaxis node-id file src/config.js
-repoaxis help
+repoaxis doctor
 ```
 
 `repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. It indexes the current folder/file hierarchy using standard Git ignore behavior, extracts JavaScript class/function symbols with source ranges and signatures, records repository-local JavaScript dependencies as canonical `imports` edges, attaches exact Git working/staged state to current file nodes, and records the exact last commit that mentions each current tracked file path. Changes whose paths are absent from the current working tree, such as deletions, remain visible through `generated.git_changes`. The generated index is rebuildable; annotations are preserved across rebuilds.
+
+Query commands emit compact JSON and read the current index snapshot. They do not automatically rebuild or refresh the index.
+
+## Target resolution
+
+Commands that accept `TARGET` recognize, in order, an exact node ID, an exact repository path, a `path:qualified_name` symbol target, or a unique structural search match. Ambiguous names fail instead of selecting an arbitrary node.
 
 ## Index contract
 
@@ -57,4 +70,4 @@ Use `repoaxis node-id` when another tool needs the canonical encoding rather tha
 
 ## Output handling
 
-Repoaxis data commands emit compact JSON summaries suitable for shell tools and agents. Validate the index before relying on it if the file may have been edited manually.
+`find`, `refs`, `parents`, `children`, and `changed` return compact projections intended for agents and shell tools. `show` returns the full indexed node plus its persistent annotation, if present. Validate the index before relying on it if the file may have been edited manually.

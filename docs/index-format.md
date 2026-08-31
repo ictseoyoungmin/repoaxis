@@ -5,7 +5,7 @@
 ```json
 {
   "schema_version": 1,
-  "tool": { "name": "repoaxis", "version": "0.6.0" },
+  "tool": { "name": "repoaxis", "version": "0.7.0" },
   "authority": "git+working-tree",
   "repository": {
     "root": ".",
