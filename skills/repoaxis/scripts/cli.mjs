@@ -4,6 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { agentContext, whyNode } from "../lib/agent-context.mjs";
 import { annotationFor, clearAnnotation, listAnnotations, readAnnotationIndex, setAnnotation } from "../lib/annotations.mjs";
+import { readOperationalIndex } from "../lib/fresh-index.mjs";
 import { buildIndex, REPOAXIS_VERSION } from "../lib/indexer.mjs";
 import { gitVersion, resolveGitRoot } from "../lib/git.mjs";
 import { makeNodeId } from "../lib/node-id.mjs";
@@ -44,24 +45,12 @@ function takeFlag(args, name) {
   return true;
 }
 
-function defaultIndexFile() {
-  try {
-    return path.join(resolveGitRoot(process.cwd()), ".repoaxis.json");
-  } catch {
-    return path.resolve(".repoaxis.json");
-  }
-}
-
 function readQueryIndex(fileArg = null) {
-  const file = path.resolve(fileArg ?? defaultIndexFile());
-  const index = JSON.parse(fs.readFileSync(file, "utf8"));
-  const validation = validateIndex(index);
-  if (!validation.ok) throw new Error(`invalid index: ${validation.errors.join("; ")}`);
-  return index;
+  return readOperationalIndex({ fileArg }).index;
 }
 
 function annotationIndexFile(fileArg = null) {
-  return path.resolve(fileArg ?? defaultIndexFile());
+  return readOperationalIndex({ fileArg }).file;
 }
 
 function parsePositiveInteger(value, label) {
@@ -73,7 +62,7 @@ function parsePositiveInteger(value, label) {
 }
 
 function help() {
-  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis context TARGET [--index FILE]\n  repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]\n  repoaxis note TARGET [TEXT...] [--clear] [--index FILE]\n  repoaxis notes [--index FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nQuery and annotation commands operate on the current index snapshot; they do not refresh it automatically. The repository and current working tree remain authoritative.`;
+  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis context TARGET [--index FILE]\n  repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]\n  repoaxis note TARGET [TEXT...] [--clear] [--index FILE]\n  repoaxis notes [--index FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nOperational commands refresh the default .repoaxis.json when Git HEAD or working-tree content changed. Passing --index FILE selects an explicit snapshot and disables automatic refresh. The repository and current working tree remain authoritative.`;
 }
 
 async function main() {
