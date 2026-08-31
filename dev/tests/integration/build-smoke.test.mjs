@@ -15,7 +15,7 @@ const fixture = path.join(projectRoot, "dev/fixtures/tiny-js");
 function copyFixture() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "repoaxis-fixture-"));
   fs.cpSync(fixture, dir, { recursive: true });
-  execFileSync("git", ["init", "-q", dir]);
+  execFileSync("git", ["init", "-q", "-b", "main", dir]);
   execFileSync("git", ["-C", dir, "config", "user.name", "Repoaxis Test"]);
   execFileSync("git", ["-C", dir, "config", "user.email", "repoaxis@example.invalid"]);
   execFileSync("git", ["-C", dir, "add", "."]);
@@ -37,8 +37,9 @@ test("build is byte-stable for the same repository state", () => {
   const b = fs.readFileSync(second.output, "utf8");
   assert.equal(a, b);
   assert.equal(validateIndex(second.index).ok, true);
-  assert.deepEqual(second.index.generated.nodes, {});
-  assert.deepEqual(second.index.generated.edges, []);
+  assert.equal(Object.keys(second.index.generated.nodes).length, 6);
+  assert.equal(second.index.generated.edges.length, 5);
+  assert.equal(Boolean(second.index.generated.nodes["file:.repoaxis.json"]), false);
 });
 
 test("rebuild preserves valid annotations", () => {

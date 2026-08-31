@@ -1,6 +1,6 @@
 ---
 name: repoaxis
-description: Use Repoaxis to initialize, validate, and inspect a local Git-aware repository structural index before broad repository exploration. Use when checking index health, locating the Repoaxis index, or preparing repository context for a coding task.
+description: Use Repoaxis to build, validate, and inspect a local Git-aware repository structural index before broad repository exploration. Use when checking repository structure, index health, or preparing focused repository context for a coding task.
 ---
 
 # Repoaxis
@@ -27,7 +27,7 @@ repoaxis node-id file src/config.js
 repoaxis help
 ```
 
-`repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. The generated graph is rebuildable; annotations are preserved across rebuilds.
+`repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. It indexes the current folder/file hierarchy using standard Git ignore behavior. The generated graph is rebuildable; annotations are preserved across rebuilds.
 
 ## Index contract
 

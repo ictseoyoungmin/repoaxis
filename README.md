@@ -2,7 +2,7 @@
 
 **Git-aware structural index for coding agents and humans.**
 
-Repoaxis is designed to let coding agents query repository structure before performing broad source scans, while giving humans a local view of the same structural state. Git plus the current working tree are authoritative; `.repoaxis.json` is a rebuildable derived index.
+Repoaxis is designed to let coding agents query repository structure before performing broad source scans, while giving humans a local view of the same structural state. Git plus the current working tree are authoritative; `.repoaxis.json` is a rebuildable derived index. `repoaxis build` currently materializes the deterministic folder/file hierarchy and canonical containment graph.
 
 ## Quick start
 
