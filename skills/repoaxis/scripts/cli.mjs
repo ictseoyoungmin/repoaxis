@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { agentContext, whyNode } from "../lib/agent-context.mjs";
+import { annotationFor, clearAnnotation, listAnnotations, readAnnotationIndex, setAnnotation } from "../lib/annotations.mjs";
 import { buildIndex, REPOAXIS_VERSION } from "../lib/indexer.mjs";
 import { gitVersion, resolveGitRoot } from "../lib/git.mjs";
 import { makeNodeId } from "../lib/node-id.mjs";
@@ -59,6 +60,10 @@ function readQueryIndex(fileArg = null) {
   return index;
 }
 
+function annotationIndexFile(fileArg = null) {
+  return path.resolve(fileArg ?? defaultIndexFile());
+}
+
 function parsePositiveInteger(value, label) {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isInteger(parsed) || parsed < 1 || String(parsed) !== String(value)) {
@@ -68,7 +73,7 @@ function parsePositiveInteger(value, label) {
 }
 
 function help() {
-  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis context TARGET [--index FILE]\n  repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nQuery commands read the current index snapshot; they do not refresh it automatically. The repository and current working tree remain authoritative.`;
+  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis context TARGET [--index FILE]\n  repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]\n  repoaxis note TARGET [TEXT...] [--clear] [--index FILE]\n  repoaxis notes [--index FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nQuery and annotation commands operate on the current index snapshot; they do not refresh it automatically. The repository and current working tree remain authoritative.`;
 }
 
 async function main() {
@@ -141,6 +146,31 @@ async function main() {
     const target = args.shift();
     if (!target || args.length) throw new Error("usage: repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]");
     return print(whyNode(readQueryIndex(indexFile), target, { maxDepth, maxPaths }));
+  }
+
+  if (command === "notes") {
+    const indexFile = takeOption(args, "--index", null);
+    if (args.length) throw new Error("usage: repoaxis notes [--index FILE]");
+    const { index } = readAnnotationIndex(annotationIndexFile(indexFile));
+    const annotations = listAnnotations(index);
+    return print({ count: annotations.length, annotations });
+  }
+
+  if (command === "note") {
+    const indexFile = takeOption(args, "--index", null);
+    const clear = takeFlag(args, "--clear");
+    const target = args.shift();
+    if (!target) throw new Error("usage: repoaxis note TARGET [TEXT...] [--clear] [--index FILE]");
+    const file = annotationIndexFile(indexFile);
+    if (clear) {
+      if (args.length) throw new Error("--clear cannot be combined with note text");
+      return print(clearAnnotation(file, target));
+    }
+    if (args.length === 0) {
+      const { index } = readAnnotationIndex(file);
+      return print(annotationFor(index, target));
+    }
+    return print(setAnnotation(file, target, args.join(" ")));
   }
 
   if (command === "doctor") {
