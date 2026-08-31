@@ -3,16 +3,18 @@ import path from "node:path";
 import { readPreservedAnnotations } from "./annotations.mjs";
 import { buildFilesystemGraph } from "./filesystem.mjs";
 import { addSymbolNodes } from "./symbols.mjs";
+import { addImportEdges } from "./imports.mjs";
 import { readHead, resolveGitRoot } from "./git.mjs";
 import { createRefreshRecord } from "./refresh.mjs";
 import { stableStringify } from "./stable-json.mjs";
 
-export const REPOAXIS_VERSION = "0.3.0";
+export const REPOAXIS_VERSION = "0.4.0";
 
 export function createIndex(root, { reason = "manual", annotations = {}, excludePaths = [] } = {}) {
   const head = readHead(root);
   const graph = buildFilesystemGraph(root, { excludePaths });
   addSymbolNodes(graph, root);
+  addImportEdges(graph, root);
   return {
     schema_version: 1,
     tool: { name: "repoaxis", version: REPOAXIS_VERSION },

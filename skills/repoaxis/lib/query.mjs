@@ -15,3 +15,25 @@ export function summarizeIndex(index) {
     by_type: byType,
   };
 }
+
+function importEdges(index) {
+  return (index?.generated?.edges ?? []).filter((edge) => edge.type === "imports");
+}
+
+export function importsFrom(index, fileId) {
+  const nodes = index?.generated?.nodes ?? {};
+  return importEdges(index)
+    .filter((edge) => edge.from === fileId)
+    .map((edge) => nodes[edge.to])
+    .filter(Boolean)
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export function importedBy(index, fileId) {
+  const nodes = index?.generated?.nodes ?? {};
+  return importEdges(index)
+    .filter((edge) => edge.to === fileId)
+    .map((edge) => nodes[edge.from])
+    .filter(Boolean)
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
