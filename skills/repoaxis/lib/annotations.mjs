@@ -52,10 +52,13 @@ export function readAnnotationIndex(filePath) {
 }
 
 function resolveAnnotationTarget(index, target, { allowOrphan = false } = {}) {
+  const value = typeof target === "string" ? target.trim() : "";
+  if (allowOrphan && value && index?.annotations?.[value] && !index?.generated?.nodes?.[value]) {
+    return { id: value, orphaned: true };
+  }
   try {
     return { id: resolveNode(index, target).id, orphaned: false };
   } catch (error) {
-    const value = typeof target === "string" ? target.trim() : "";
     if (allowOrphan && value && index?.annotations?.[value]) {
       return { id: value, orphaned: !index?.generated?.nodes?.[value] };
     }
