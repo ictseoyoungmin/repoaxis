@@ -5,11 +5,12 @@ import { buildFilesystemGraph } from "./filesystem.mjs";
 import { addSymbolNodes } from "./symbols.mjs";
 import { addImportEdges } from "./imports.mjs";
 import { attachGitState } from "./git-state.mjs";
+import { attachGitContext } from "./git-context.mjs";
 import { readHead, resolveGitRoot } from "./git.mjs";
 import { createRefreshRecord } from "./refresh.mjs";
 import { stableStringify } from "./stable-json.mjs";
 
-export const REPOAXIS_VERSION = "0.5.0";
+export const REPOAXIS_VERSION = "0.6.0";
 
 export function createIndex(root, { reason = "manual", annotations = {}, excludePaths = [] } = {}) {
   const head = readHead(root);
@@ -17,6 +18,7 @@ export function createIndex(root, { reason = "manual", annotations = {}, exclude
   addSymbolNodes(graph, root);
   addImportEdges(graph, root);
   const gitChanges = attachGitState(graph, root, { excludePaths });
+  attachGitContext(graph, root);
   return {
     schema_version: 1,
     tool: { name: "repoaxis", version: REPOAXIS_VERSION },

@@ -5,7 +5,7 @@
 ```json
 {
   "schema_version": 1,
-  "tool": { "name": "repoaxis", "version": "0.5.0" },
+  "tool": { "name": "repoaxis", "version": "0.6.0" },
   "authority": "git+working-tree",
   "repository": {
     "root": ".",
@@ -23,7 +23,14 @@
           "tracked": true,
           "working": "modified",
           "staged": false,
-          "conflicted": false
+          "conflicted": false,
+          "last_commit": {
+            "sha": "0123456789abcdef0123456789abcdef01234567",
+            "author_name": "Example Author",
+            "authored_at": "2026-08-30T10:00:00+09:00",
+            "committed_at": "2026-08-30T10:02:00+09:00",
+            "subject": "Update service"
+          }
         },
         "meta": {
           "size_bytes": 120,
@@ -113,6 +120,24 @@ Rename/copy records can additionally include `rename_from` or `copy_from` plus G
 `generated.git_changes` contains the non-clean path records for the repository. It intentionally includes changed paths with no current filesystem node, especially deleted tracked files. The generated Repoaxis output path is excluded from this projection so an untracked `.repoaxis.json` cannot make a rebuild change itself.
 
 Colors and badges are UI projections only. Consumers should use the serialized Git fields for decisions.
+
+## File commit context
+
+For each current file node, `git.last_commit` records the exact last Git commit that mentions the file's current repository path:
+
+```json
+{
+  "sha": "0123456789abcdef0123456789abcdef01234567",
+  "author_name": "Example Author",
+  "authored_at": "2026-08-30T10:00:00+09:00",
+  "committed_at": "2026-08-30T10:02:00+09:00",
+  "subject": "Update service"
+}
+```
+
+The lookup is current-path based and does not duplicate repository history. A tracked file that has never been committed, such as a newly staged addition, has `last_commit: null`. Untracked files also have `last_commit: null`.
+
+An uncommitted rename keeps its exact working-tree rename data but the new path receives `last_commit: null` until Git contains a commit for that path. Repoaxis does not silently attribute the old path's history to the new path. Symbol nodes do not carry inferred commit history; consumers can use their containing file's exact context.
 
 ## JavaScript symbol projection
 
