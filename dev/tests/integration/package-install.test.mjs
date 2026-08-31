@@ -89,8 +89,9 @@ test("packed npm artifact installs and completes the documented first-run workfl
   assert.ok(summary.nodes >= 6);
 
   const found = jsonRun(binary, ["find", "parseConfig"], firstRunRoot);
-  assert.equal(found.length, 1);
-  assert.equal(found[0].qualified_name, "parseConfig");
+  assert.equal(found.total, 1);
+  assert.equal(found.matches.length, 1);
+  assert.equal(found.matches[0].qualified_name, "parseConfig");
 
   const context = jsonRun(binary, ["context", "parseConfig"], firstRunRoot);
   assert.equal(context.file.node.path, "src/config.js");
