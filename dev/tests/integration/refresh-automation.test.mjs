@@ -68,7 +68,8 @@ test("query-time refresh follows HEAD, dirty content, staged blobs, and explicit
   assert.equal(state.reason, "head-changed");
   assert.equal(state.index.repository.head_sha, git(root, "rev-parse", "HEAD"));
 
-  const snapshot = path.join(root, "snapshot.json");
+  const snapshotRoot = fs.mkdtempSync(path.join(os.tmpdir(), "repoaxis-snapshot-"));
+  const snapshot = path.join(snapshotRoot, "snapshot.json");
   fs.copyFileSync(indexFile, snapshot);
   fs.writeFileSync(path.join(root, "src", "config.js"), "export const value = 'ee';\n", "utf8");
   state = readOperationalIndex({ cwd: root, fileArg: snapshot });
@@ -81,7 +82,7 @@ test("query-time refresh follows HEAD, dirty content, staged blobs, and explicit
   assert.equal(readIndex(root).generated.refresh.reason, "query:working-tree-changed");
 });
 
-test("manual builds preserve annotations and do not become stale because of their own output", () => {
+test("manual builds do not become stale because of their own output", () => {
   const root = createRepo();
   const indexFile = path.join(root, ".repoaxis.json");
   buildIndex({ root });
