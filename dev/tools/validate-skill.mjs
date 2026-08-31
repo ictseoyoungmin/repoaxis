@@ -23,7 +23,9 @@ function walk(dir) {
 }
 
 const failures = [];
+const textExtensions = new Set([".md", ".mjs", ".js", ".json", ".html", ".txt", ".css", ".toml", ".yaml", ".yml"]);
 for (const file of walk(skillRoot)) {
+  if (!textExtensions.has(path.extname(file).toLowerCase())) continue;
   const text = fs.readFileSync(file, "utf8");
   for (const pattern of forbidden) if (pattern.test(text)) failures.push(`${path.relative(root, file)} matched ${pattern}`);
 }

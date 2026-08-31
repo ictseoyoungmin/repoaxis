@@ -27,7 +27,7 @@ repoaxis node-id file src/config.js
 repoaxis help
 ```
 
-`repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. It indexes the current folder/file hierarchy using standard Git ignore behavior. The generated graph is rebuildable; annotations are preserved across rebuilds.
+`repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. It indexes the current folder/file hierarchy using standard Git ignore behavior and extracts JavaScript class/function symbols with source ranges and signatures. The generated graph is rebuildable; annotations are preserved across rebuilds.
 
 ## Index contract
 
@@ -45,7 +45,7 @@ Node IDs are deterministic for the same repository-relative identity.
 ```text
 file:src/auth/service.py
 class:src/auth/service.py::AuthService
-func:src/auth/service.py::AuthService.login
+function:src/auth/service.py::AuthService.login
 ```
 
 Use `repoaxis node-id` when another tool needs the canonical encoding rather than constructing IDs ad hoc.

@@ -32,14 +32,8 @@
       "required": ["nodes", "edges", "refresh"],
       "additionalProperties": false,
       "properties": {
-        "nodes": {
-          "type": "object",
-          "additionalProperties": { "$ref": "#/$defs/node" }
-        },
-        "edges": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/edge" }
-        },
+        "nodes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/node" } },
+        "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
         "refresh": {
           "type": "object",
           "required": ["reason"],
@@ -73,14 +67,24 @@
           "properties": {
             "start_line": { "type": "integer", "minimum": 1 },
             "end_line": { "type": "integer", "minimum": 1 },
-            "signature": { "type": "string" }
+            "signature": { "type": "string" },
+            "start_column": { "type": "integer", "minimum": 0 },
+            "end_column": { "type": "integer", "minimum": 0 }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "required": ["start_line", "start_column", "end_line", "end_column", "signature"]
         },
         "git": { "type": "object" },
         "meta": { "type": "object" }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [{
+        "if": {
+          "properties": { "type": { "enum": ["class", "function"] } },
+          "required": ["type"]
+        },
+        "then": { "required": ["qualified_name", "parent_id", "source"] }
+      }]
     },
     "edge": {
       "type": "object",

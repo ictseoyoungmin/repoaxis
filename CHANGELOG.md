@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — 2026-08-31
+
+- Added JavaScript symbol indexing for `.js`, `.mjs`, and `.cjs` files.
+- Added canonical class/function nodes for declarations, methods, class-field functions, variable-bound functions, and nested named functions.
+- Added deterministic qualified names, parent links, source ranges, and compact signatures.
+- Added graceful file-level parse diagnostics so malformed JavaScript does not abort repository builds.
+- Added a pinned vendored Acorn 8.15.0 parser and its MIT license notice for reproducible parsing without runtime dependency drift.
+- Added symbol extraction, containment, parse-failure, and regression coverage.
+
 ## 0.2.0 — 2026-08-31
 
 - Added deterministic folder/file indexing rooted at `folder:.`.

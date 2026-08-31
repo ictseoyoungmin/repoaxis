@@ -6,7 +6,7 @@
 Checks that Repoaxis, Node.js, Git, and the current Git repository can be resolved.
 
 ### `repoaxis build`
-Creates or rebuilds `.repoaxis.json` at the Git root. The command indexes the current folder/file hierarchy, preserves valid annotations already stored in the target file, and respects standard Git ignore rules.
+Creates or rebuilds `.repoaxis.json` at the Git root. The command indexes the current folder/file hierarchy, extracts JavaScript class/function symbols from `.js`, `.mjs`, and `.cjs` files, preserves valid annotations already stored in the target file, and respects standard Git ignore rules. Parse failures are recorded on the file node without aborting the build.
 
 Options:
 

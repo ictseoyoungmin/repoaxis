@@ -37,8 +37,8 @@ test("build is byte-stable for the same repository state", () => {
   const b = fs.readFileSync(second.output, "utf8");
   assert.equal(a, b);
   assert.equal(validateIndex(second.index).ok, true);
-  assert.equal(Object.keys(second.index.generated.nodes).length, 6);
-  assert.equal(second.index.generated.edges.length, 5);
+  assert.equal(Object.keys(second.index.generated.nodes).length, 8);
+  assert.equal(second.index.generated.edges.length, 7);
   assert.equal(Boolean(second.index.generated.nodes["file:.repoaxis.json"]), false);
 });
 

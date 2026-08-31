@@ -29,13 +29,17 @@ function copyFixture() {
   return dir;
 }
 
-function nodeIds(index) {
-  return Object.keys(index.generated.nodes).sort();
+function filesystemNodeIds(index) {
+  return Object.values(index.generated.nodes)
+    .filter((node) => node.type === "folder" || node.type === "file")
+    .map((node) => node.id)
+    .sort();
 }
 
-function containsPairs(index) {
+function filesystemContainsPairs(index) {
+  const nodes = index.generated.nodes;
   return index.generated.edges
-    .filter((edge) => edge.type === "contains")
+    .filter((edge) => edge.type === "contains" && (nodes[edge.to]?.type === "folder" || nodes[edge.to]?.type === "file"))
     .map((edge) => `${edge.from} -> ${edge.to}`)
     .sort();
 }
@@ -44,7 +48,7 @@ test("build indexes deterministic folder/file hierarchy", () => {
   const dir = copyFixture();
   const { index } = buildIndex({ root: dir });
   assert.equal(validateIndex(index).ok, true);
-  assert.deepEqual(nodeIds(index), [
+  assert.deepEqual(filesystemNodeIds(index), [
     "file:package.json",
     "file:src/index.js",
     "file:src/service.js",
@@ -52,18 +56,17 @@ test("build indexes deterministic folder/file hierarchy", () => {
     "folder:.",
     "folder:src",
   ]);
-  assert.deepEqual(containsPairs(index), [
+  assert.deepEqual(filesystemContainsPairs(index), [
     "folder:. -> file:package.json",
     "folder:. -> folder:src",
     "folder:src -> file:src/index.js",
     "folder:src -> file:src/service.js",
     "folder:src -> file:src/utils.js",
   ]);
-  assert.deepEqual(index.generated.nodes["file:src/index.js"].meta, {
-    size_bytes: fs.statSync(path.join(dir, "src/index.js")).size,
-    extension: ".js",
-    symlink: false,
-  });
+  const meta = index.generated.nodes["file:src/index.js"].meta;
+  assert.equal(meta.size_bytes, fs.statSync(path.join(dir, "src/index.js")).size);
+  assert.equal(meta.extension, ".js");
+  assert.equal(meta.symlink, false);
 });
 
 test("build includes visible untracked files and respects git ignore rules", () => {
@@ -76,7 +79,7 @@ test("build includes visible untracked files and respects git ignore rules", () 
   fs.writeFileSync(path.join(dir, "scratch.tmp"), "ignored\n");
 
   const { index } = buildIndex({ root: dir });
-  const ids = nodeIds(index);
+  const ids = filesystemNodeIds(index);
   assert.ok(ids.includes("file:.gitignore"));
   assert.ok(ids.includes("file:notes/todo.md"));
   assert.ok(ids.includes("folder:notes"));
@@ -88,5 +91,5 @@ test("deleted tracked files are absent from the current filesystem projection", 
   const dir = copyFixture();
   fs.rmSync(path.join(dir, "src/utils.js"));
   const { index } = buildIndex({ root: dir });
-  assert.ok(!nodeIds(index).includes("file:src/utils.js"));
+  assert.ok(!filesystemNodeIds(index).includes("file:src/utils.js"));
 });
