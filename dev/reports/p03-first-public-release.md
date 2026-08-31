@@ -1,24 +1,26 @@
 # P03 · First Public Release & npm Bootstrap
 
-Status: REVIEW
+Status: CLOSED
 
-## Goal
+## Result
 
-Create Repoaxis's first public GitHub Release for `v0.12.0` without requiring a manual tag operation, while keeping npm publication disabled until registry ownership is explicitly established.
+Repoaxis `v0.12.0` was released publicly from main commit `9ea8fb600aaa50f4c63792f300cf5edbd8a816a1`.
 
-## Bootstrap contract
+- Git tag: `v0.12.0`
+- GitHub Release: `https://github.com/ictseoyoungmin/repoaxis/releases/tag/v0.12.0`
+- Release assets: `repoaxis-0.12.0.tgz`, `repoaxis-0.12.0.tgz.sha256`, `release-manifest.json`
+- Tarball SHA-256: `1c9a65e0120a1ef1ef9a36467a5245d67d3b16fed063bd28ee66e38ffeb34919`
+- The public release artifact digest matches the reviewed P02 dry-run digest.
+- Full release workflow completed successfully before publication.
 
-- Normal future releases remain tag-triggered through `.github/workflows/release.yml`.
-- The first release adds one guarded main-push path scoped only to `dev/reports/p03-release-request.json`.
-- On that one-time path, the workflow derives `v${package.json.version}`, refuses to overwrite an existing tag, tags the merge commit, and creates the release in the same workflow run.
-- The release commit must be reachable from `main`.
-- Full tests run again before release asset creation.
-- `npm publish` remains absent.
+## Bootstrap cleanup
 
-## Closure target
+The temporary main-push bootstrap path was removed after the first release. Future releases use the normal guarded `vX.Y.Z` tag-triggered workflow only.
 
-1. PR CI is green on the final head.
-2. Merge triggers the guarded bootstrap run.
-3. `v0.12.0` is created on the P03 main merge commit.
-4. GitHub Release `v0.12.0` exists with the npm tarball, SHA-256 file, and release manifest.
-5. npm registry status is recorded separately; lack of package ownership must not block the GitHub Release.
+## npm boundary
+
+No npm publication was performed.
+
+Current public searches do not expose an existing `repoaxis` package, and npm trusted publishing cannot be configured until the package already exists in the registry. The first npm publication therefore requires a one-time authenticated npm-owner action. After the package exists, configure GitHub Actions as a Trusted Publisher and enable tokenless OIDC publication with provenance for later releases.
+
+This npm ownership bootstrap is external account administration, not a Repoaxis runtime or release-pipeline defect, and does not block the completed GitHub Release.
