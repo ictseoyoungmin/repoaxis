@@ -10,33 +10,35 @@ Default operational commands keep `.repoaxis.json` current on demand. Repoaxis c
 
 Durable repository notes are authored separately from generated structure. They are projected into `.repoaxis.json` for consumers and also stored under Git metadata so deleting and rebuilding the derived index does not destroy repository memory.
 
-## Quick start
+## First five minutes
+
+Run Repoaxis **from the Git repository you want to inspect**:
 
 ```bash
-npm install
-npm test
-node bin/repoaxis doctor
-node bin/repoaxis context parseConfig
-node bin/repoaxis unreferenced
-node bin/repoaxis view
-```
-
-When published as the `repoaxis` npm package:
-
-```bash
+cd /path/to/your-repository
 npx repoaxis doctor
-npx repoaxis context parseConfig
-npx repoaxis why parseConfig
+npx repoaxis build
+npx repoaxis summary
+npx repoaxis changed
 npx repoaxis unreferenced
-npx repoaxis note parseConfig "Configuration boundary used by the CLI."
 npx repoaxis view
 ```
 
+`build` writes `.repoaxis.json` at the Git root. `summary`, `changed`, and `unreferenced` give useful repository-wide orientation without opening source files, and `view` opens the read-only localhost human surface.
+
+When you know or can search for a target, narrow before reading source:
+
+```bash
+npx repoaxis find parseConfig
+npx repoaxis context parseConfig
+npx repoaxis why parseConfig
+```
+
+Replace `parseConfig` with a symbol or path from your repository. `context` gives the containing file, source range, Git state, imports, reverse imports, and annotations without embedding the source text. `why` gives bounded structural provenance from canonical `imports` and `contains` edges.
+
 `repoaxis unreferenced` lists JavaScript files with no incoming repository-local import. This is a conservative structural candidate list, not a dead-code verdict. CLI entry points, migrations, workers, framework registration, configuration-driven modules, fixtures, and plugins may legitimately appear there.
 
-`repoaxis view` starts a read-only structural viewer on `127.0.0.1`. It shows the canonical folder/file/class/function tree, Git status and last-file commit context, stored annotations, repository-local imports and reverse imports, and a bounded dependency graph. The browser polls the local viewer API while open, and the API reuses Repoaxis freshness checks so the view follows the working tree without an always-on daemon.
-
-A focused agent workflow is:
+## Agent workflow
 
 ```text
 repoaxis find TARGET       # only when the target is not already known
@@ -47,14 +49,35 @@ edit
 repoaxis note TARGET ...   # only for durable non-obvious context
 ```
 
+The intended behavior is not “index everything and replace source reading.” Repoaxis should reduce the amount of repository exploration needed before a focused read or edit.
+
+## Plugin distribution
+
+Repoaxis ships a repository-level Codex/ChatGPT marketplace manifest at `.agents/plugins/marketplace.json`, plus standalone Codex and Claude plugin manifests.
+
+For a managed ChatGPT/Codex workspace that supports GitHub marketplace import:
+
+1. Open **Workspace settings → Plugins**.
+2. Choose **Add → Import marketplace**.
+3. Use `https://github.com/ictseoyoungmin/repoaxis` as the source repository.
+4. Leave **Path** empty because the marketplace manifest is at the repository root.
+5. Use the default branch for continuously synced updates, or pin a tag/commit when you need a fixed revision.
+
+For local Claude Code development, see `docs/installation.md`. The CLI remains independently usable through npm/npx even when an agent host does not expose plugin executables directly.
+
+## Human viewer
+
+`repoaxis view` starts a read-only structural viewer on `127.0.0.1`. It shows the canonical folder/file/class/function tree, Git status and last-file commit context, stored annotations, repository-local imports and reverse imports, and a bounded dependency graph. The browser polls the local viewer API while open, and the API reuses Repoaxis freshness checks so the view follows the working tree without an always-on daemon.
+
 ## Distribution surfaces
 
+- `.agents/plugins/marketplace.json` — repository-level Codex/ChatGPT marketplace catalog.
 - `skills/repoaxis/` — installable agent skill and its runtime source.
 - `.claude-plugin/plugin.json` — Claude Code plugin manifest.
 - `.codex-plugin/plugin.json` — Codex plugin manifest.
 - `bin/repoaxis` — npm/CLI entrypoint.
 - `docs/` — user-facing installation and format references.
-- `dev/` — repository-only design, fixtures, tests, and release checks.
+- `dev/` — repository-only design, fixtures, tests, and release checks; excluded from the npm tarball.
 
 The runtime implementation exists once under `skills/repoaxis/`; the package entrypoint and plugin manifests route to that same source.
 
