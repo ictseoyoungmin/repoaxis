@@ -1,18 +1,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { validateReleaseContract } from "./release-contract.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const required = [
   ".agents/plugins/marketplace.json",
   ".codex-plugin/plugin.json",
   ".claude-plugin/plugin.json",
+  ".github/workflows/release.yml",
   "skills/repoaxis/SKILL.md",
   "skills/repoaxis/schemas/repoaxis.schema.json",
   "skills/repoaxis/lib/view-server.mjs",
   "skills/repoaxis/viewer/repoaxis.html",
   "skills/repoaxis/lib/vendor/acorn-8.15.0.mjs",
   "skills/repoaxis/lib/vendor/ACORN-LICENSE.txt",
+  "docs/releasing.md",
   "docs/third-party.md",
   "docs/viewer.md",
   "bin/repoaxis",
@@ -61,4 +64,5 @@ if (!vendor.includes('version = "8.15.0"') && !vendor.includes("version = '8.15.
 }
 const license = fs.readFileSync(path.join(root, "skills/repoaxis/lib/vendor/ACORN-LICENSE.txt"), "utf8");
 if (!license.includes("MIT License")) throw new Error("Acorn MIT license text is missing");
+validateReleaseContract(root);
 console.log("package structure: ok");
