@@ -34,6 +34,7 @@
     "validate:skill": "node dev/tools/validate-skill.mjs",
     "validate:package": "node dev/tools/validate-package.mjs",
     "check": "npm run validate:skill && npm run validate:package && npm test",
+    "release:prepare": "node dev/tools/prepare-release.mjs",
     "release:dry-run": "node dev/tools/build-release.mjs"
   },
   "keywords": [

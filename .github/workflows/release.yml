@@ -1,0 +1,50 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repoaxis-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'ictseoyoungmin/repoaxis'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Require tag commit on main history
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+      - run: npm ci
+      - run: npm run check
+
+      - name: Prepare release assets
+        run: node dev/tools/prepare-release.mjs --tag "$GITHUB_REF_NAME" --out dist/release
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/release/repoaxis-*.tgz \
+            dist/release/repoaxis-*.tgz.sha256 \
+            dist/release/release-manifest.json \
+            --verify-tag \
+            --title "Repoaxis $GITHUB_REF_NAME" \
+            --notes-file dist/release/release-notes.md
