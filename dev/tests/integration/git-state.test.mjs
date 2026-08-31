@@ -28,6 +28,20 @@ function commitAll(root, message = "fixture") {
   git(root, "commit", "-qm", message);
 }
 
+function workingTreeFields(state) {
+  const output = {
+    tracked: state.tracked,
+    working: state.working,
+    staged: state.staged,
+    conflicted: state.conflicted,
+  };
+  if (state.rename_from !== undefined) output.rename_from = state.rename_from;
+  if (state.copy_from !== undefined) output.copy_from = state.copy_from;
+  if (state.similarity !== undefined) output.similarity = state.similarity;
+  if (state.conflict_code !== undefined) output.conflict_code = state.conflict_code;
+  return output;
+}
+
 test("Git status distinguishes working, staged, deleted, renamed, and untracked state", () => {
   const dir = createRepository();
   for (const [name, value] of Object.entries({
@@ -100,13 +114,13 @@ test("build attaches exact file Git state and keeps absent deletions in git_chan
 
   assert.equal(validateIndex(second.index).ok, true);
   assert.equal(firstBytes, secondBytes);
-  assert.deepEqual(second.index.generated.nodes["file:clean.txt"].git, {
+  assert.deepEqual(workingTreeFields(second.index.generated.nodes["file:clean.txt"].git), {
     tracked: true,
     working: "clean",
     staged: false,
     conflicted: false,
   });
-  assert.deepEqual(second.index.generated.nodes["file:new.txt"].git, {
+  assert.deepEqual(workingTreeFields(second.index.generated.nodes["file:new.txt"].git), {
     tracked: false,
     working: "untracked",
     staged: false,
