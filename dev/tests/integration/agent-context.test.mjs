@@ -63,6 +63,7 @@ function fixtureIndex() {
       refresh: { reason: "manual" },
     },
     annotations: {
+      "folder:src": { agent_note: "application source boundary" },
       "function:src/parser.js::parseConfig": { agent_note: "configuration boundary" },
     },
   };
@@ -81,6 +82,7 @@ test("context composes focused structural, Git, and annotation evidence", () => 
   assert.equal(context.file.git.last_commit.subject, "update parser");
   assert.equal(context.file.change.working, "modified");
   assert.equal(context.annotation.agent_note, "configuration boundary");
+  assert.deepEqual(context.annotations.map((record) => record.node_id), ["folder:src", "function:src/parser.js::parseConfig"]);
 });
 
 test("why explains only indexed imports and containment", () => {
