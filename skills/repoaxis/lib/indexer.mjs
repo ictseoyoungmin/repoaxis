@@ -10,7 +10,7 @@ import { readHead, resolveGitRoot } from "./git.mjs";
 import { createRefreshRecord } from "./refresh.mjs";
 import { stableStringify } from "./stable-json.mjs";
 
-export const REPOAXIS_VERSION = "0.7.0";
+export const REPOAXIS_VERSION = "0.8.0";
 
 export function createIndex(root, { reason = "manual", annotations = {}, excludePaths = [] } = {}) {
   const head = readHead(root);
