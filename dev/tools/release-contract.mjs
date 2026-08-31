@@ -37,7 +37,7 @@ export function validateReleaseContract(root, { tag = null } = {}) {
   const workflow = fs.existsSync(workflowPath) ? fs.readFileSync(workflowPath, "utf8") : "";
 
   if (pkg.name !== "repoaxis") throw new Error("package name must be repoaxis");
-  if (!/^\\d+\\.\\d+\\.\\d+$/.test(pkg.version)) throw new Error(`package version is not release semver: ${pkg.version}`);
+  if (!/^\d+\.\d+\.\d+$/.test(pkg.version)) throw new Error(`package version is not release semver: ${pkg.version}`);
   if (pkg.repository?.url !== EXPECTED_REPOSITORY_URL) {
     throw new Error(`package repository.url must be ${EXPECTED_REPOSITORY_URL}`);
   }
@@ -52,7 +52,7 @@ export function validateReleaseContract(root, { tag = null } = {}) {
   if (tag !== null && tag !== releaseTag) throw new Error(`release tag ${tag} does not match package version ${releaseTag}`);
   const notes = extractReleaseNotes(changelog, pkg.version);
   if (!workflow) throw new Error(".github/workflows/release.yml is missing");
-  if (/\\bnpm\\s+(?:--[^\\s]+\\s+)*publish\\b/.test(workflow)) {
+  if (/\bnpm\s+(?:--[^\s]+\s+)*publish\b/.test(workflow)) {
     throw new Error("release workflow must not publish to npm before trusted publishing is enabled");
   }
   if (!workflow.includes("gh release create")) throw new Error("release workflow must create a GitHub Release");
