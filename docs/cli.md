@@ -22,6 +22,19 @@ Options:
 - `--output FILE` — write to a different index path.
 - `--reason TEXT` — record the refresh trigger.
 
+### `repoaxis view [--root PATH] [--port N] [--no-open]`
+Starts the read-only Repoaxis human viewer on `127.0.0.1`.
+
+The viewer renders the canonical structure tree, Git state and last-file commit context, source ranges/signatures, annotations, repository-local imports and reverse imports, and a bounded file dependency graph. It requests the default current index through the local server, so S09 freshness checks still apply while the viewer is open.
+
+Options:
+
+- `--root PATH` — resolve another Git repository.
+- `--port N` — choose the loopback port. Default: `4173`; `0` asks the OS for a free port.
+- `--no-open` — start the server without launching a browser.
+
+The viewer is read-only. Annotation changes remain explicit `note` CLI operations. See `docs/viewer.md` for the server and graph boundaries.
+
 ### `repoaxis validate [FILE]`
 Validates the Repoaxis v1 outer contract and graph invariants supported by the installed version.
 
@@ -80,7 +93,7 @@ The generated index stores `generated.refresh.fingerprint`. Default operational 
 
 Repoaxis hashes content only for paths Git already reports as changed or untracked, and hashes staged index records for staged/conflicted paths. Clean tracked files are represented by Git HEAD plus status, avoiding a full-repository content hash on every query. The generated index path itself is excluded so rebuilding or editing annotations does not cause self-triggered refresh loops.
 
-There is no always-on background daemon in this behavior.
+There is no always-on background daemon in this behavior. `repoaxis view` is a foreground localhost process; when it exits, no viewer process remains.
 
 ## Target resolution
 
@@ -89,6 +102,7 @@ Commands that accept `TARGET` try an exact node ID first. They then accept an ex
 Examples:
 
 ```bash
+repoaxis view
 repoaxis find parseConfig
 repoaxis context src/config.js:parseConfig
 repoaxis why src/config.js:parseConfig
