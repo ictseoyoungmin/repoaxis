@@ -83,3 +83,31 @@ export function extractJavaScriptSymbols(source, repoPath) {
   visit(ast,{symbolKey:null,qualifiedName:null});
   return { symbols, diagnostic:{status:"ok"} };
 }
+
+function importRecord(node, specifier, kind) {
+  return { specifier, kind, line: node.loc?.start?.line ?? null, column: node.loc?.start?.column ?? null };
+}
+
+function literalString(node) {
+  if (node?.type === "Literal" && typeof node.value === "string") return node.value;
+  if (node?.type === "TemplateLiteral" && node.expressions?.length === 0 && node.quasis?.length === 1) return node.quasis[0].value.cooked ?? node.quasis[0].value.raw ?? null;
+  return null;
+}
+
+export function extractJavaScriptImports(source, repoPath) {
+  let ast;
+  try { ast = parseJavaScript(source, repoPath); }
+  catch (error) { return { imports: [], diagnostic: { status: "error", message: String(error?.message ?? error), line: error?.loc?.line ?? null, column: error?.loc?.column ?? null } }; }
+  const imports = [];
+  function visit(node) {
+    if (!node || typeof node.type !== "string") return;
+    if (node.type === "ImportDeclaration") { const specifier = literalString(node.source); if (specifier != null) imports.push(importRecord(node, specifier, "import")); return; }
+    if (node.type === "ExportNamedDeclaration" || node.type === "ExportAllDeclaration") { const specifier = literalString(node.source); if (specifier != null) imports.push(importRecord(node, specifier, "re-export")); if (node.declaration) visit(node.declaration); return; }
+    if (node.type === "ImportExpression") { const specifier = literalString(node.source); if (specifier != null) imports.push(importRecord(node, specifier, "dynamic-import")); return; }
+    if (node.type === "CallExpression" && node.callee?.type === "Identifier" && node.callee.name === "require") { const specifier = node.arguments?.length === 1 ? literalString(node.arguments[0]) : null; if (specifier != null) imports.push(importRecord(node, specifier, "require")); return; }
+    for (const child of childNodes(node)) visit(child);
+  }
+  visit(ast);
+  imports.sort((a, b) => (a.line ?? 0) - (b.line ?? 0) || (a.column ?? 0) - (b.column ?? 0) || a.specifier.localeCompare(b.specifier) || a.kind.localeCompare(b.kind));
+  return { imports, diagnostic: { status: "ok" } };
+}

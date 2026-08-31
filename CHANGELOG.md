@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 2026-08-31
+
+- Added canonical file-to-file `imports` edges for repository-local JavaScript dependencies.
+- Added static ESM import/re-export, string-literal dynamic `import()`, and best-effort CommonJS `require()` extraction.
+- Added deterministic relative resolution for exact paths, common JavaScript/JSON extensions, and directory `index` files.
+- Added compact external/unresolved import diagnostics without creating synthetic package nodes.
+- Added derived `importsFrom()` / `importedBy()` traversal helpers without persisting reverse edges.
+- Added circular-import, duplicate-edge collapse, external/unresolved, and reverse-traversal integration coverage.
+
 ## 0.3.0 — 2026-08-31
 
 - Added JavaScript symbol indexing for `.js`, `.mjs`, and `.cjs` files.

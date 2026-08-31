@@ -27,7 +27,7 @@ repoaxis node-id file src/config.js
 repoaxis help
 ```
 
-`repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. It indexes the current folder/file hierarchy using standard Git ignore behavior and extracts JavaScript class/function symbols with source ranges and signatures. The generated graph is rebuildable; annotations are preserved across rebuilds.
+`repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. It indexes the current folder/file hierarchy using standard Git ignore behavior, extracts JavaScript class/function symbols with source ranges and signatures, and records repository-local JavaScript dependencies as canonical `imports` edges. The generated graph is rebuildable; annotations are preserved across rebuilds.
 
 ## Index contract
 
@@ -35,7 +35,7 @@ repoaxis help
 - Derived index: `.repoaxis.json`.
 - Canonical graph: `generated.nodes` + `generated.edges`.
 - Persistent notes: `annotations`.
-- Canonical edge directions are stored once; reverse relationships are derived by consumers.
+- Canonical edge directions are stored once; reverse relationships such as imported-by are derived by consumers.
 - Paths in the index use repository-relative POSIX form.
 
 ## Node identity

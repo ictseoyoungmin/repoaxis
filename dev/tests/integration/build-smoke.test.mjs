@@ -38,7 +38,7 @@ test("build is byte-stable for the same repository state", () => {
   assert.equal(a, b);
   assert.equal(validateIndex(second.index).ok, true);
   assert.equal(Object.keys(second.index.generated.nodes).length, 8);
-  assert.equal(second.index.generated.edges.length, 7);
+  assert.equal(second.index.generated.edges.length, 9);
   assert.equal(Boolean(second.index.generated.nodes["file:.repoaxis.json"]), false);
 });
 

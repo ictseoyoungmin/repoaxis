@@ -5,7 +5,7 @@
 ```json
 {
   "schema_version": 1,
-  "tool": { "name": "repoaxis", "version": "0.3.0" },
+  "tool": { "name": "repoaxis", "version": "0.4.0" },
   "authority": "git+working-tree",
   "repository": {
     "root": ".",
@@ -89,3 +89,25 @@ If JavaScript parsing fails, Repoaxis keeps the file node, emits no symbols from
 Symbolic links are not parsed for symbols, so building an index never follows a symlink to read source outside the repository path.
 
 The graph is canonical. Reverse relationships are projections rather than duplicated edges. Paths use `/` separators and never serialize an absolute repository path.
+
+## JavaScript import projection
+
+For `.js`, `.mjs`, and `.cjs` files, Repoaxis records repository-local dependencies as canonical file-to-file `imports` edges:
+
+```json
+{
+  "type": "imports",
+  "from": "file:src/main.js",
+  "to": "file:src/service.js",
+  "meta": {
+    "specifiers": ["./service.js"],
+    "kinds": ["import"]
+  }
+}
+```
+
+Supported source forms are static ESM imports, ESM re-exports with a source, string-literal dynamic `import()`, and best-effort string-literal CommonJS `require()`. Relative resolution checks indexed files only and is bounded to the repository. Exact paths are preferred, followed by common JavaScript/JSON extensions and directory `index` candidates.
+
+Bare package specifiers and unresolved relative specifiers do not create synthetic nodes. JavaScript file metadata records deterministic counts plus unique `external_specifiers` and `unresolved_specifiers` for inspection.
+
+Several import sites between the same two files collapse to one canonical edge with sorted metadata. `imported_by` is not stored; reverse dependency traversal is derived from incoming `imports` edges.
