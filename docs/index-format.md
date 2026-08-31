@@ -5,7 +5,7 @@
 ```json
 {
   "schema_version": 1,
-  "tool": { "name": "repoaxis", "version": "0.10.0" },
+  "tool": { "name": "repoaxis", "version": "0.12.0" },
   "authority": "git+working-tree",
   "repository": {
     "root": ".",
@@ -103,7 +103,11 @@
 
 ## Ownership boundary
 
-`generated` is rebuildable derived state. `annotations` is durable user/agent-authored memory. A rebuild may replace generated nodes, edges, Git projections, and refresh metadata, but it preserves valid annotations separately.
+`generated` is rebuildable derived state. `annotations` is the index projection of user/agent-authored memory. A rebuild may replace generated nodes, edges, Git projections, and refresh metadata while preserving authored notes separately.
+
+For the default repository index, authored notes are durably stored under Git metadata at `repoaxis/annotations.json`, resolved with `git rev-parse --git-path`. Repoaxis projects that durable memory into `.repoaxis.json`, so deleting the derived index and rebuilding does not delete repository notes. The durable file is not part of the working tree and does not participate in the repository freshness fingerprint.
+
+An explicit non-default snapshot retains annotations in that snapshot and does not become the repository's durable annotation store.
 
 An annotation key is a canonical node ID and the current V1 writable field is `agent_note`. Repoaxis does not require every annotation key to have a current node: when a node disappears, its note remains as an orphan until the user or agent explicitly clears it. This prevents source edits, temporary deletions, or index rebuilds from silently destroying authored memory.
 
@@ -202,3 +206,9 @@ Supported source forms are static ESM imports, ESM re-exports with a source, str
 Bare package specifiers and unresolved relative specifiers do not create synthetic nodes. JavaScript file metadata records deterministic counts plus unique `external_specifiers` and `unresolved_specifiers` for inspection.
 
 Several import sites between the same two files collapse to one canonical edge with sorted metadata. `imported_by` is not stored; reverse dependency traversal is derived from incoming `imports` edges.
+
+## Unreferenced candidate projection
+
+`repoaxis unreferenced` derives a file-level candidate list from the canonical graph. A JavaScript file is a candidate when no repository-local `imports` edge points to its file node.
+
+This is deliberately not a dead-code model. Runtime entry points, package scripts, workers, migrations, plugin or framework registration, configuration-driven modules, fixtures, and other indirect mechanisms can all be valid candidates. Consumers must combine the structural signal with runtime/framework evidence before making removal decisions.
