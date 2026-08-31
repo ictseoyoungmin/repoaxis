@@ -53,10 +53,16 @@ function sourceLocation(node) {
   };
 }
 
+function contextualAnnotations(index, nodes) {
+  return nodes
+    .map((node) => ({ node_id: node.id, annotation: index?.annotations?.[node.id] ?? null }))
+    .filter((record) => record.annotation !== null);
+}
+
 export function agentContext(index, target) {
   const node = resolveNode(index, target);
   const file = containingFile(index, node);
-  const ancestors = containmentAncestors(index, node).reverse().map(compactNode);
+  const ancestorNodes = containmentAncestors(index, node).reverse();
   const annotation = index?.annotations?.[node.id] ?? null;
   const result = {
     snapshot: {
@@ -66,9 +72,10 @@ export function agentContext(index, target) {
     },
     target: compactNode(node),
     location: sourceLocation(node),
-    containment_path: ancestors,
+    containment_path: ancestorNodes.map(compactNode),
     children: directChildren(index, node).map(compactNode),
     annotation,
+    annotations: contextualAnnotations(index, [...ancestorNodes, node]),
     file: null,
     dependencies: null,
   };
@@ -119,8 +126,15 @@ function upstreamImportPaths(index, targetFile, { maxDepth, maxPaths }) {
 
   const queue = [{ id: targetFile.id, reversed: [targetFile.id] }];
   const paths = [];
+  const maxStates = Math.max(64, maxPaths * 64);
+  let processedStates = 0;
   let truncated = false;
   while (queue.length) {
+    if (processedStates >= maxStates) {
+      truncated = true;
+      break;
+    }
+    processedStates += 1;
     const current = queue.shift();
     const depth = current.reversed.length - 1;
     const predecessors = incoming.get(current.id) ?? [];
@@ -175,6 +189,7 @@ export function whyNode(index, target, { maxDepth = 8, maxPaths = 3 } = {}) {
   }
 
   const tail = containmentTail(index, file, node);
+  if (!tail) throw new Error(`containment path missing for ${node.id}`);
   const upstream = upstreamImportPaths(index, file, { maxDepth, maxPaths });
   const paths = upstream.paths.map((path) => ({
     nodes: [...path.nodes, ...tail.nodes.slice(1)],
