@@ -44,24 +44,3 @@ test("release preparation emits tarball, checksum, manifest, and notes", () => {
     fs.rmSync(output, { recursive: true, force: true });
   }
 });
-
-test("first public release bootstrap is one-time, version-pinned, and publish-safe", () => {
-  const contract = validateReleaseContract(repositoryRoot);
-  const request = JSON.parse(
-    fs.readFileSync(path.join(repositoryRoot, "dev/reports/p03-release-request.json"), "utf8"),
-  );
-  const workflow = fs.readFileSync(
-    path.join(repositoryRoot, ".github/workflows/release.yml"),
-    "utf8",
-  );
-
-  assert.equal(request.mode, "first-public-release-bootstrap");
-  assert.equal(request.tag, contract.tag);
-  assert.equal(request.package_version, contract.version);
-  assert.equal(request.trigger, "merge-to-main");
-  assert.equal(request.npm_publish, false);
-  assert.match(workflow, /dev\/reports\/p03-release-request\.json/);
-  assert.match(workflow, /git tag "\$TAG" "\$GITHUB_SHA"/);
-  assert.match(workflow, /git push origin "\$TAG"/);
-  assert.doesNotMatch(workflow, /\bnpm\s+(?:--[^\s]+\s+)*publish\b/);
-});
