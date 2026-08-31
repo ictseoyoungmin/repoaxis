@@ -1,5 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+  readDurableAnnotations,
+  repositoryRootForDefaultIndex,
+  writeDurableAnnotations,
+} from "./annotation-store.mjs";
 import { resolveNode } from "./query.mjs";
 import { validateIndex } from "./schema.mjs";
 import { stableStringify } from "./stable-json.mjs";
@@ -19,7 +24,7 @@ function cleanAnnotations(value) {
   return output;
 }
 
-export function readPreservedAnnotations(filePath) {
+function readIndexAnnotations(filePath) {
   if (!fs.existsSync(filePath)) return {};
   try {
     const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -27,6 +32,19 @@ export function readPreservedAnnotations(filePath) {
   } catch {
     return {};
   }
+}
+
+export function readPreservedAnnotations(filePath) {
+  const legacy = readIndexAnnotations(filePath);
+  const root = repositoryRootForDefaultIndex(filePath);
+  if (!root) return legacy;
+
+  const durable = cleanAnnotations(readDurableAnnotations(root));
+  const merged = cleanAnnotations({ ...legacy, ...durable });
+  if (stableStringify(durable) !== stableStringify(merged)) {
+    writeDurableAnnotations(root, merged);
+  }
+  return merged;
 }
 
 export function sanitizeAnnotations(value) {
@@ -48,6 +66,12 @@ export function readAnnotationIndex(filePath) {
   const index = JSON.parse(fs.readFileSync(absolute, "utf8"));
   const validation = validateIndex(index);
   if (!validation.ok) throw new Error(`invalid index: ${validation.errors.join("; ")}`);
+
+  const root = repositoryRootForDefaultIndex(absolute);
+  if (root) {
+    const durable = cleanAnnotations(readDurableAnnotations(root));
+    index.annotations = cleanAnnotations({ ...index.annotations, ...durable });
+  }
   return { file: absolute, index };
 }
 
@@ -98,11 +122,17 @@ function writeIndexAtomic(filePath, index) {
   }
 }
 
+function persistDefaultRepositoryAnnotations(filePath, annotations) {
+  const root = repositoryRootForDefaultIndex(filePath);
+  if (root) writeDurableAnnotations(root, cleanAnnotations(annotations));
+}
+
 export function setAnnotation(filePath, target, note) {
   const { file, index } = readAnnotationIndex(filePath);
   const resolved = resolveAnnotationTarget(index, target);
   const agentNote = normalizeNote(note);
   index.annotations[resolved.id] = { agent_note: agentNote };
+  persistDefaultRepositoryAnnotations(file, index.annotations);
   writeIndexAtomic(file, index);
   return { target_id: resolved.id, orphaned: false, annotation: index.annotations[resolved.id] };
 }
@@ -112,6 +142,7 @@ export function clearAnnotation(filePath, target) {
   const resolved = resolveAnnotationTarget(index, target, { allowOrphan: true });
   const existed = Boolean(index.annotations[resolved.id]);
   delete index.annotations[resolved.id];
+  persistDefaultRepositoryAnnotations(file, index.annotations);
   writeIndexAtomic(file, index);
   return { target_id: resolved.id, orphaned: resolved.orphaned, cleared: existed };
 }

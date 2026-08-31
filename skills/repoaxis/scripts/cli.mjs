@@ -4,6 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { agentContext, whyNode } from "../lib/agent-context.mjs";
 import { annotationFor, clearAnnotation, listAnnotations, readAnnotationIndex, setAnnotation } from "../lib/annotations.mjs";
+import { unreferencedCandidates } from "../lib/candidates.mjs";
 import { readOperationalIndex } from "../lib/fresh-index.mjs";
 import { buildIndex, REPOAXIS_VERSION } from "../lib/indexer.mjs";
 import { gitVersion, resolveGitRoot } from "../lib/git.mjs";
@@ -71,7 +72,7 @@ function parsePort(value) {
 }
 
 function help() {
-  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis view [--root PATH] [--port N] [--no-open]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis context TARGET [--index FILE]\n  repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]\n  repoaxis note TARGET [TEXT...] [--clear] [--index FILE]\n  repoaxis notes [--index FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nOperational commands refresh the default .repoaxis.json when Git HEAD or working-tree content changed. Passing --index FILE selects an explicit snapshot and disables automatic refresh. The viewer binds only to 127.0.0.1 and reads the same fresh default index. The repository and current working tree remain authoritative.`;
+  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis view [--root PATH] [--port N] [--no-open]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis unreferenced [--index FILE]\n  repoaxis context TARGET [--index FILE]\n  repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]\n  repoaxis note TARGET [TEXT...] [--clear] [--index FILE]\n  repoaxis notes [--index FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nOperational commands refresh the default .repoaxis.json when Git HEAD or working-tree content changed. Passing --index FILE selects an explicit snapshot and disables automatic refresh. The viewer binds only to 127.0.0.1 and reads the same fresh default index. Unreferenced output is conservative structural evidence, never a dead-code verdict. The repository and current working tree remain authoritative.`;
 }
 
 async function main() {
@@ -137,6 +138,12 @@ async function main() {
     const stagedOnly = takeFlag(args, "--staged");
     if (args.length) throw new Error(`unexpected arguments: ${args.join(" ")}`);
     return print(changedPaths(readQueryIndex(indexFile), { stagedOnly }));
+  }
+
+  if (command === "unreferenced") {
+    const indexFile = takeOption(args, "--index", null);
+    if (args.length) throw new Error("usage: repoaxis unreferenced [--index FILE]");
+    return print(unreferencedCandidates(readQueryIndex(indexFile)));
   }
 
   if (command === "context") {
