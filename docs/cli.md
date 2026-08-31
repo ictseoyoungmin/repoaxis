@@ -14,7 +14,7 @@ Use `--index FILE` to select an explicit snapshot. An explicit index is validate
 Checks that Repoaxis, Node.js, Git, and the current Git repository can be resolved.
 
 ### `repoaxis build`
-Creates or rebuilds `.repoaxis.json` at the Git root. The command indexes the current folder/file hierarchy, extracts JavaScript class/function symbols from `.js`, `.mjs`, and `.cjs` files, preserves valid annotations already stored in the target file, and respects standard Git ignore rules. Parse failures are recorded on the file node without aborting the build.
+Creates or rebuilds `.repoaxis.json` at the Git root. The command indexes the current folder/file hierarchy, extracts JavaScript class/function symbols from `.js`, `.mjs`, and `.cjs` files, projects durable repository annotations, and respects standard Git ignore rules. Parse failures are recorded on the file node without aborting the build.
 
 Options:
 
@@ -25,7 +25,7 @@ Options:
 ### `repoaxis view [--root PATH] [--port N] [--no-open]`
 Starts the read-only Repoaxis human viewer on `127.0.0.1`.
 
-The viewer renders the canonical structure tree, Git state and last-file commit context, source ranges/signatures, annotations, repository-local imports and reverse imports, and a bounded file dependency graph. It requests the default current index through the local server, so S09 freshness checks still apply while the viewer is open.
+The viewer renders the canonical structure tree, Git state and last-file commit context, source ranges/signatures, annotations, repository-local imports and reverse imports, and a bounded file dependency graph. It requests the default current index through the local server, so freshness checks still apply while the viewer is open.
 
 Options:
 
@@ -59,6 +59,13 @@ Lists direct outgoing `contains` children only.
 ### `repoaxis changed [--staged] [--index FILE]`
 Lists `generated.git_changes`. `--staged` keeps only paths with a staged change. Deleted paths remain visible even when no current file node exists.
 
+### `repoaxis unreferenced [--index FILE]`
+Lists JavaScript file nodes that have no incoming repository-local `imports` edge.
+
+The output basis is `no-incoming-repository-imports`. It is intentionally a conservative candidate projection, not a dead-code analysis. Runtime entry points, CLI scripts, migrations, workers, framework registration, configuration-driven modules, fixtures, plugins, and other indirect entry mechanisms may appear in the result.
+
+Use additional runtime or framework evidence before removing a candidate. A durable annotation is appropriate when a candidate has a non-obvious runtime role.
+
 ### `repoaxis context TARGET [--index FILE]`
 Builds one focused packet for a coding agent without copying source text. It includes the resolved node, source line/column range when available, containment path, immediate children, containing-file Git state and exact last commit, matching working-tree change, target/file annotations, and repository-local `imports` / `imported_by` projections.
 
@@ -77,7 +84,9 @@ Reads, writes, or clears one durable `agent_note`.
 - With `--clear`, removes the note. An orphaned annotation can be cleared by supplying its exact stored node ID.
 - Setting a note requires a currently resolvable, unambiguous node. Missing or ambiguous targets fail instead of creating detached memory.
 
-Annotation mutation validates the index before writing and replaces the index file atomically. It changes only the `annotations` section; generated structure remains derived state.
+For the default repository index, Repoaxis writes authored notes to Git metadata at `repoaxis/annotations.json` (resolved with `git rev-parse --git-path`) and projects the same notes into `.repoaxis.json`. This keeps generated structure disposable: deleting `.repoaxis.json` and rebuilding does not delete repository notes. The durable annotation file lives under Git metadata, not the working tree.
+
+Explicit non-default snapshot files keep their own annotation state and do not become the repository's durable note store.
 
 ### `repoaxis notes [--index FILE]`
 Lists all stored annotations in deterministic node-ID order. Each entry includes `orphaned: true` when its node no longer exists in the current generated graph.
@@ -111,6 +120,7 @@ repoaxis refs src/config.js
 repoaxis parents src/config.js:parseConfig
 repoaxis children src/config.js
 repoaxis changed --staged
+repoaxis unreferenced
 repoaxis note src/config.js:parseConfig "Configuration boundary used by the CLI."
 repoaxis note src/config.js:parseConfig
 repoaxis notes
