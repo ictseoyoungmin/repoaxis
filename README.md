@@ -2,7 +2,7 @@
 
 **Git-aware structural index for coding agents and humans.**
 
-Repoaxis is designed to let coding agents query repository structure before performing broad source scans, while giving humans a local view of the same structural state. Git plus the current working tree are authoritative; `.repoaxis.json` is a rebuildable derived index. `repoaxis build` materializes the deterministic folder/file hierarchy and, for JavaScript (`.js`, `.mjs`, `.cjs`), class/function symbols with canonical containment, source ranges, and signatures. Repository-local JavaScript imports are resolved into directional file-to-file `imports` edges without storing duplicated reverse edges. Current file nodes also carry exact Git working/staged state and current-path last-commit context, while `generated.git_changes` keeps changed paths such as deletions visible even when no current filesystem node exists.
+Repoaxis is designed to let coding agents query repository structure before performing broad source scans, while giving humans a local view of the same structural state. Git plus the current working tree are authoritative; `.repoaxis.json` is a rebuildable derived index. `repoaxis build` materializes the deterministic folder/file hierarchy and, for JavaScript (`.js`, `.mjs`, `.cjs`), class/function symbols with canonical containment, source ranges, and signatures. Repository-local JavaScript imports are resolved into directional file-to-file `imports` edges without storing duplicated reverse edges. Current file nodes also carry exact Git working/staged state and current-path last-commit context, while `generated.git_changes` keeps changed paths such as deletions visible even when no current filesystem node exists. Durable user/agent notes live separately under `annotations` and survive generated-index rebuilds.
 
 ## Quick start
 
@@ -21,6 +21,7 @@ npx repoaxis doctor
 npx repoaxis build
 npx repoaxis context parseConfig
 npx repoaxis why parseConfig
+npx repoaxis note parseConfig "Configuration boundary used by the CLI."
 ```
 
 A focused agent workflow is:
@@ -30,6 +31,8 @@ repoaxis find TARGET       # only when the target is not already known
 repoaxis context TARGET
 repoaxis why TARGET        # when dependency provenance matters
 read only the indicated source file/range
+edit
+repoaxis note TARGET ...   # only for durable non-obvious context
 ```
 
 ## Distribution surfaces
@@ -57,10 +60,14 @@ repoaxis children
 repoaxis changed
 repoaxis context
 repoaxis why
+repoaxis note
+repoaxis notes
 repoaxis doctor
 repoaxis node-id
 ```
 
 Query commands read the current `.repoaxis.json` snapshot and emit compact JSON. They do not refresh the index automatically. `context` combines structural, Git, commit, change, and annotation evidence without embedding source text. `why` reports bounded paths from the canonical graph and does not infer runtime entry points or function calls.
+
+`note` and `notes` provide the persistent memory surface. New notes can only be attached to a current resolved node; rebuilds preserve them. If a node later disappears, the annotation is retained and reported as orphaned until it is explicitly cleared by exact node ID.
 
 See `docs/cli.md` and `docs/installation.md`.
