@@ -1,11 +1,5 @@
-import fs from "node:fs";
 import path from "node:path";
-import zlib from "node:zlib";
-
-const acornCompressed = fs.readFileSync(new URL("../vendor/acorn-8.15.0.mjs.gz", import.meta.url));
-const acornSource = zlib.gunzipSync(acornCompressed).toString("utf8");
-const acornModuleUrl = `data:text/javascript;base64,${Buffer.from(acornSource).toString("base64")}`;
-const { parse } = await import(acornModuleUrl);
+import { parse } from "../vendor/acorn-8.15.0.mjs";
 
 export const JAVASCRIPT_PARSER = Object.freeze({ name: "acorn", version: "8.15.0" });
 
