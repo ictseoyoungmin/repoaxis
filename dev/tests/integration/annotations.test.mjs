@@ -80,3 +80,30 @@ test("new annotations require a current unambiguous target and bounded note text
   setAnnotation(indexFile, "src/config.js", "file-level note");
   assert.equal(clearAnnotation(indexFile, "src/config.js").cleared, true);
 });
+
+test("an exact orphan node ID wins over a fuzzy match to a current node", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "repoaxis-orphan-resolution-"));
+  const indexFile = path.join(root, "index.json");
+  const orphanId = "file:src/config.js";
+  const index = {
+    schema_version: 1,
+    tool: { name: "repoaxis", version: "0.9.0" },
+    authority: "git+working-tree",
+    repository: { root: ".", head_sha: null, head_ref: null },
+    generated: {
+      nodes: {
+        "folder:.": { id: "folder:.", type: "folder", path: "." },
+        "file:src/config.js.backup": { id: "file:src/config.js.backup", type: "file", path: "src/config.js.backup" },
+      },
+      edges: [{ type: "contains", from: "folder:.", to: "file:src/config.js.backup" }],
+      refresh: { reason: "manual" },
+    },
+    annotations: { [orphanId]: { agent_note: "old exact path note" } },
+  };
+  fs.writeFileSync(indexFile, `${JSON.stringify(index)}\n`, "utf8");
+
+  const read = runCli(indexFile, "note", orphanId);
+  assert.equal(read.target_id, orphanId);
+  assert.equal(read.orphaned, true);
+  assert.equal(read.annotation.agent_note, "old exact path note");
+});
