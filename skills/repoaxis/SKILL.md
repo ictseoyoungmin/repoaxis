@@ -1,6 +1,6 @@
 ---
 name: repoaxis
-description: Use Repoaxis to build, validate, and query a local Git-aware repository structural index before broad repository exploration. Use when locating code, inspecting structural relationships, checking Git working-tree state or file commit context, preparing focused repository context, and preserving non-obvious repository knowledge for later coding-agent sessions.
+description: Use Repoaxis to build, validate, and query a local Git-aware repository structural index before broad repository exploration. Use when locating code, inspecting structural relationships, checking Git working-tree state or file commit context, preparing focused repository context, preserving non-obvious repository knowledge for later coding-agent sessions, or opening the local human structure viewer.
 ---
 
 # Repoaxis
@@ -24,6 +24,7 @@ Repoaxis provides a local, rebuildable structural index for a Git repository. Tr
 
 ```bash
 repoaxis build
+repoaxis view
 repoaxis find parseConfig
 repoaxis context src/config.js:parseConfig
 repoaxis why src/config.js:parseConfig
@@ -45,6 +46,8 @@ repoaxis doctor
 `repoaxis build` writes `.repoaxis.json` at the Git root unless another output path is supplied. It indexes the current folder/file hierarchy using standard Git ignore behavior, extracts JavaScript class/function symbols with source ranges and signatures, records repository-local JavaScript dependencies as canonical `imports` edges, attaches exact Git working/staged state to current file nodes, and records the exact last commit that mentions each current tracked file path. Changes whose paths are absent from the current working tree, such as deletions, remain visible through `generated.git_changes`. The generated index is rebuildable; annotations are preserved across rebuilds.
 
 Operational query and annotation commands automatically refresh the default `.repoaxis.json` when the index is missing, the installed Repoaxis version changed, Git HEAD/ref changed, or relevant working-tree/staged content changed. Passing `--index FILE` explicitly selects a snapshot and disables automatic refresh for that command.
+
+`repoaxis view` starts a read-only viewer on `127.0.0.1`. It exposes the canonical structure tree, repository-local import and reverse-import relationships, a bounded file dependency graph, Git state, exact last-file commit context, source ranges/signatures, and stored annotations. The viewer asks Repoaxis for a fresh default index while it is open; it does not create another source of truth or a persistent background daemon.
 
 ## Focused context workflow
 
@@ -112,4 +115,4 @@ Use `repoaxis node-id` when another tool needs the canonical encoding rather tha
 
 ## Output handling
 
-`find`, `refs`, `parents`, `children`, and `changed` return compact projections intended for agents and shell tools. `show` returns the full indexed node plus its persistent annotation. `context` returns a focused agent packet without source text, and `why` returns bounded structural evidence paths. `note` and `notes` mutate or inspect only the annotation section of a validated index. Validate the index before relying on it if the file may have been edited manually. Use `--index FILE` when you intentionally need a fixed historical or test snapshot instead of current repository state.
+`find`, `refs`, `parents`, `children`, and `changed` return compact projections intended for agents and shell tools. `show` returns the full indexed node plus its persistent annotation. `context` returns a focused agent packet without source text, and `why` returns bounded structural evidence paths. `note` and `notes` mutate or inspect only the annotation section of a validated index. `view` is a read-only localhost projection of the same current index. Validate the index before relying on it if the file may have been edited manually. Use `--index FILE` when you intentionally need a fixed historical or test snapshot instead of current repository state.
