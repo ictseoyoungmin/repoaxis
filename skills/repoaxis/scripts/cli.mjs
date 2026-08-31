@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { agentContext, whyNode } from "../lib/agent-context.mjs";
 import { buildIndex, REPOAXIS_VERSION } from "../lib/indexer.mjs";
 import { gitVersion, resolveGitRoot } from "../lib/git.mjs";
 import { makeNodeId } from "../lib/node-id.mjs";
@@ -67,7 +68,7 @@ function parsePositiveInteger(value, label) {
 }
 
 function help() {
-  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nQuery commands read the current index snapshot; they do not refresh it automatically. The repository and current working tree remain authoritative.`;
+  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis context TARGET [--index FILE]\n  repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nQuery commands read the current index snapshot; they do not refresh it automatically. The repository and current working tree remain authoritative.`;
 }
 
 async function main() {
@@ -124,6 +125,22 @@ async function main() {
     const stagedOnly = takeFlag(args, "--staged");
     if (args.length) throw new Error(`unexpected arguments: ${args.join(" ")}`);
     return print(changedPaths(readQueryIndex(indexFile), { stagedOnly }));
+  }
+
+  if (command === "context") {
+    const indexFile = takeOption(args, "--index", null);
+    const target = args.shift();
+    if (!target || args.length) throw new Error("usage: repoaxis context TARGET [--index FILE]");
+    return print(agentContext(readQueryIndex(indexFile), target));
+  }
+
+  if (command === "why") {
+    const indexFile = takeOption(args, "--index", null);
+    const maxDepth = parsePositiveInteger(takeOption(args, "--max-depth", "8"), "--max-depth");
+    const maxPaths = parsePositiveInteger(takeOption(args, "--max-paths", "3"), "--max-paths");
+    const target = args.shift();
+    if (!target || args.length) throw new Error("usage: repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]");
+    return print(whyNode(readQueryIndex(indexFile), target, { maxDepth, maxPaths }));
   }
 
   if (command === "doctor") {
