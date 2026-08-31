@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://repoaxis.dev/schema/repoaxis.schema.json",
+  "title": "Repoaxis Index",
+  "type": "object",
+  "required": ["schema_version", "tool", "authority", "repository", "generated", "annotations"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "tool": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "const": "repoaxis" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "authority": { "const": "git+working-tree" },
+    "repository": {
+      "type": "object",
+      "required": ["root", "head_sha", "head_ref"],
+      "additionalProperties": false,
+      "properties": {
+        "root": { "const": "." },
+        "head_sha": { "type": ["string", "null"] },
+        "head_ref": { "type": ["string", "null"] }
+      }
+    },
+    "generated": {
+      "type": "object",
+      "required": ["nodes", "edges", "refresh"],
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/node" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/edge" }
+        },
+        "refresh": {
+          "type": "object",
+          "required": ["reason"],
+          "additionalProperties": false,
+          "properties": { "reason": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "annotations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["agent_note"],
+        "additionalProperties": false,
+        "properties": { "agent_note": { "type": "string", "minLength": 1 } }
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "type", "path"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["folder", "file", "class", "function"] },
+        "path": { "type": "string", "minLength": 1 },
+        "qualified_name": { "type": "string" },
+        "parent_id": { "type": ["string", "null"] },
+        "source": {
+          "type": "object",
+          "properties": {
+            "start_line": { "type": "integer", "minimum": 1 },
+            "end_line": { "type": "integer", "minimum": 1 },
+            "signature": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "git": { "type": "object" },
+        "meta": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "edge": {
+      "type": "object",
+      "required": ["type", "from", "to"],
+      "properties": {
+        "type": { "enum": ["contains", "imports"] },
+        "from": { "type": "string", "minLength": 1 },
+        "to": { "type": "string", "minLength": 1 },
+        "meta": { "type": "object" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

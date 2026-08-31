@@ -1,0 +1,17 @@
+{
+  "name": "repoaxis",
+  "version": "0.1.0",
+  "description": "Git-aware structural indexing for repository navigation by coding agents and humans.",
+  "license": "MIT",
+  "keywords": ["repository", "git", "code-navigation", "agent", "structural-index"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Repoaxis",
+    "shortDescription": "Query repository structure before broad scans",
+    "longDescription": "Repoaxis maintains a rebuildable Git-aware structural index that coding agents can inspect before opening large portions of a repository.",
+    "developerName": "Repoaxis contributors",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive"],
+    "defaultPrompt": ["Use Repoaxis to inspect repository structure before broad repository exploration."]
+  }
+}

@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+(async () => {
+  await import("../skills/repoaxis/scripts/cli.mjs");
+})().catch((error) => {
+  console.error(`repoaxis: ${error.message}`);
+  process.exitCode = 1;
+});

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Repoaxis Index Viewer</title>
+<style>
+:root{font-family:ui-sans-serif,system-ui,sans-serif;color-scheme:light dark}body{max-width:900px;margin:48px auto;padding:0 20px}h1{margin-bottom:8px}.muted{opacity:.68}.card{border:1px solid color-mix(in srgb,currentColor 20%,transparent);border-radius:16px;padding:20px;margin:20px 0}dl{display:grid;grid-template-columns:160px 1fr;gap:10px}dt{font-weight:700}code{font-family:ui-monospace,monospace}input{margin:12px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style>
+</head>
+<body>
+<h1>Repoaxis</h1>
+<p class="muted">Inspect the header and graph counts of a local <code>.repoaxis.json</code> file.</p>
+<div class="card">
+  <input id="file" type="file" accept="application/json,.json">
+  <p id="status">Choose an index file.</p>
+</div>
+<div id="summary" class="card" hidden></div>
+<script>
+const file=document.querySelector('#file'),status=document.querySelector('#status'),summary=document.querySelector('#summary');
+file.addEventListener('change',async()=>{const f=file.files[0];if(!f)return;try{const d=JSON.parse(await f.text());const nodes=Object.values(d.generated?.nodes||{});const by={folder:0,file:0,class:0,function:0};for(const n of nodes)if(n.type in by)by[n.type]++;summary.innerHTML=`<dl><dt>Schema</dt><dd>${d.schema_version??'—'}</dd><dt>Authority</dt><dd>${d.authority??'—'}</dd><dt>HEAD</dt><dd><code>${d.repository?.head_sha??'—'}</code></dd><dt>Ref</dt><dd>${d.repository?.head_ref??'—'}</dd><dt>Nodes</dt><dd>${nodes.length}</dd><dt>Edges</dt><dd>${d.generated?.edges?.length??0}</dd><dt>Annotations</dt><dd>${Object.keys(d.annotations||{}).length}</dd><dt>By type</dt><dd><code>${JSON.stringify(by)}</code></dd></dl>`;summary.hidden=false;status.textContent=`Loaded ${f.name}`;}catch(e){summary.hidden=true;status.textContent=`Could not read index: ${e.message}`;}});
+</script>
+</body>
+</html>

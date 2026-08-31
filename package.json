@@ -1,0 +1,37 @@
+{
+  "name": "repoaxis",
+  "version": "0.1.0",
+  "description": "Git-aware structural index for coding agents and humans.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "repoaxis": "./bin/repoaxis"
+  },
+  "files": [
+    ".codex-plugin/",
+    ".claude-plugin/",
+    "bin/",
+    "skills/",
+    "docs/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test dev/tests/**/*.test.mjs",
+    "validate:skill": "node dev/tools/validate-skill.mjs",
+    "validate:package": "node dev/tools/validate-package.mjs",
+    "check": "npm run validate:skill && npm run validate:package && npm test",
+    "release:dry-run": "node dev/tools/build-release.mjs"
+  },
+  "keywords": [
+    "git",
+    "repository",
+    "code-navigation",
+    "coding-agent",
+    "structural-index"
+  ]
+}
