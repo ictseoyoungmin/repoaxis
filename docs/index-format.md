@@ -5,7 +5,7 @@
 ```json
 {
   "schema_version": 1,
-  "tool": { "name": "repoaxis", "version": "0.4.0" },
+  "tool": { "name": "repoaxis", "version": "0.5.0" },
   "authority": "git+working-tree",
   "repository": {
     "root": ".",
@@ -19,6 +19,12 @@
         "id": "file:src/service.js",
         "type": "file",
         "path": "src/service.js",
+        "git": {
+          "tracked": true,
+          "working": "modified",
+          "staged": false,
+          "conflicted": false
+        },
         "meta": {
           "size_bytes": 120,
           "extension": ".js",
@@ -59,6 +65,22 @@
       { "type": "contains", "from": "folder:src", "to": "file:src/service.js" },
       { "type": "contains", "from": "file:src/service.js", "to": "function:src/service.js::greet" }
     ],
+    "git_changes": [
+      {
+        "path": "src/service.js",
+        "tracked": true,
+        "working": "modified",
+        "staged": false,
+        "conflicted": false
+      },
+      {
+        "path": "src/removed.js",
+        "tracked": true,
+        "working": "deleted",
+        "staged": false,
+        "conflicted": false
+      }
+    ],
     "refresh": { "reason": "manual" }
   },
   "annotations": {}
@@ -70,6 +92,27 @@
 The filesystem graph contains a `folder:.` root, repository-relative folder/file nodes, and canonical `contains` edges. Repoaxis asks Git for tracked files plus visible untracked files and respects standard Git ignore rules. Tracked paths that no longer exist in the working tree are not emitted as filesystem nodes.
 
 File metadata contains deterministic filesystem facts: byte size, extension, and whether the path is a symbolic link.
+
+## Git state projection
+
+Current file nodes may include a top-level `git` object. Repoaxis reads Git porcelain v2 and stores state as data rather than presentation:
+
+```json
+{
+  "tracked": true,
+  "working": "clean",
+  "staged": "modified",
+  "conflicted": false
+}
+```
+
+`working` describes the current working-tree side and is one of `clean`, `modified`, `added`, `deleted`, `renamed`, `copied`, `type-changed`, `untracked`, or `conflicted`. `staged` is `false` when the index has no change for the path, otherwise it records the staged change kind. This separation preserves cases where a file is staged and then modified again.
+
+Rename/copy records can additionally include `rename_from` or `copy_from` plus Git's `similarity` percentage. Unmerged files include `conflicted: true` and may include a two-character `conflict_code` such as `UU`.
+
+`generated.git_changes` contains the non-clean path records for the repository. It intentionally includes changed paths with no current filesystem node, especially deleted tracked files. The generated Repoaxis output path is excluded from this projection so an untracked `.repoaxis.json` cannot make a rebuild change itself.
+
+Colors and badges are UI projections only. Consumers should use the serialized Git fields for decisions.
 
 ## JavaScript symbol projection
 
