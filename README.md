@@ -2,9 +2,13 @@
 
 **Git-aware structural index for coding agents and humans.**
 
-Repoaxis is designed to let coding agents query repository structure before performing broad source scans, while giving humans a local view of the same structural state. Git plus the current working tree are authoritative; `.repoaxis.json` is a rebuildable derived index. `repoaxis build` materializes the deterministic folder/file hierarchy and, for JavaScript (`.js`, `.mjs`, `.cjs`), class/function symbols with canonical containment, source ranges, and signatures. Repository-local JavaScript imports are resolved into directional file-to-file `imports` edges without storing duplicated reverse edges. Current file nodes also carry exact Git working/staged state and current-path last-commit context, while `generated.git_changes` keeps changed paths such as deletions visible even when no current filesystem node exists. Durable user/agent notes live separately under `annotations` and survive generated-index rebuilds.
+Repoaxis lets coding agents query repository structure before broad source scans while giving humans a local view of the same structural state. Git plus the current working tree are authoritative; `.repoaxis.json` is a rebuildable derived index.
 
-Default operational commands keep `.repoaxis.json` current on demand. Before answering, Repoaxis compares a compact repository fingerprint and rebuilds when the index is missing or stale. No always-on daemon is required. Passing `--index FILE` explicitly opts into fixed snapshot behavior instead.
+The index contains deterministic folder/file hierarchy, JavaScript (`.js`, `.mjs`, `.cjs`) class/function symbols, canonical containment, source ranges/signatures, repository-local `imports` edges, exact Git working/staged state, current-path last-file commit context, and changed paths such as deletions. Reverse import relationships are derived instead of stored twice.
+
+Default operational commands keep `.repoaxis.json` current on demand. Repoaxis compares a compact repository fingerprint and rebuilds when the index is missing or stale. No always-on daemon is required. Passing `--index FILE` explicitly opts into fixed snapshot behavior instead.
+
+Durable repository notes are authored separately from generated structure. They are projected into `.repoaxis.json` for consumers and also stored under Git metadata so deleting and rebuilding the derived index does not destroy repository memory.
 
 ## Quick start
 
@@ -13,6 +17,7 @@ npm install
 npm test
 node bin/repoaxis doctor
 node bin/repoaxis context parseConfig
+node bin/repoaxis unreferenced
 node bin/repoaxis view
 ```
 
@@ -22,9 +27,12 @@ When published as the `repoaxis` npm package:
 npx repoaxis doctor
 npx repoaxis context parseConfig
 npx repoaxis why parseConfig
+npx repoaxis unreferenced
 npx repoaxis note parseConfig "Configuration boundary used by the CLI."
 npx repoaxis view
 ```
+
+`repoaxis unreferenced` lists JavaScript files with no incoming repository-local import. This is a conservative structural candidate list, not a dead-code verdict. CLI entry points, migrations, workers, framework registration, configuration-driven modules, fixtures, and plugins may legitimately appear there.
 
 `repoaxis view` starts a read-only structural viewer on `127.0.0.1`. It shows the canonical folder/file/class/function tree, Git status and last-file commit context, stored annotations, repository-local imports and reverse imports, and a bounded dependency graph. The browser polls the local viewer API while open, and the API reuses Repoaxis freshness checks so the view follows the working tree without an always-on daemon.
 
@@ -63,6 +71,7 @@ repoaxis refs
 repoaxis parents
 repoaxis children
 repoaxis changed
+repoaxis unreferenced
 repoaxis context
 repoaxis why
 repoaxis note
@@ -73,7 +82,7 @@ repoaxis node-id
 
 Operational query and annotation commands refresh the default `.repoaxis.json` when Git HEAD/ref or relevant working/staged content changes, then emit compact JSON. `context` combines structural, Git, commit, change, and annotation evidence without embedding source text. `why` reports bounded paths from the canonical graph and does not infer runtime entry points or function calls.
 
-`note` and `notes` provide the persistent memory surface. New notes can only be attached to a current resolved node; rebuilds preserve them. If a node later disappears, the annotation is retained and reported as orphaned until it is explicitly cleared by exact node ID.
+`note` and `notes` provide the persistent memory surface. New notes can only be attached to a current resolved node. Default repository notes are stored under Git metadata and projected into the current index, so deleting `.repoaxis.json` does not delete them. If a node later disappears, the annotation is retained and reported as orphaned until it is explicitly cleared by exact node ID.
 
 Use `--index FILE` on operational commands when you intentionally want to query or mutate an explicit snapshot without automatic refresh. The human viewer intentionally follows only the default current repository index and is read-only.
 
