@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — 2026-08-31
+
+- Added exact file-level Git state from porcelain v2 for clean, modified, added, deleted, renamed, copied, untracked, staged, type-changed, and conflicted paths.
+- Added top-level `file-node.git` data with independent working-tree and staged state instead of encoding status as presentation colors.
+- Added `generated.git_changes` so changed paths remain queryable even when a current filesystem node is absent, such as tracked deletions.
+- Added rename/copy source path, similarity, and merge-conflict code metadata where Git reports them.
+- Kept generated output paths out of Git change projection so rebuilding `.repoaxis.json` remains deterministic even when the output itself is untracked.
+- Added real-repository coverage for mixed staged/working changes, renames, deletions, untracked files, conflicts, and deterministic rebuild behavior.
+
 ## 0.4.0 — 2026-08-31
 
 - Added canonical file-to-file `imports` edges for repository-local JavaScript dependencies.
