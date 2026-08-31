@@ -5,7 +5,7 @@
 ```json
 {
   "schema_version": 1,
-  "tool": { "name": "repoaxis", "version": "0.8.0" },
+  "tool": { "name": "repoaxis", "version": "0.9.0" },
   "authority": "git+working-tree",
   "repository": {
     "root": ".",
@@ -90,9 +90,21 @@
     ],
     "refresh": { "reason": "manual" }
   },
-  "annotations": {}
+  "annotations": {
+    "function:src/service.js::greet": {
+      "agent_note": "Registered by the CLI bootstrap path."
+    }
+  }
 }
 ```
+
+## Ownership boundary
+
+`generated` is rebuildable derived state. `annotations` is durable user/agent-authored memory. A rebuild may replace generated nodes, edges, Git projections, and refresh metadata, but it preserves valid annotations separately.
+
+An annotation key is a canonical node ID and the current V1 writable field is `agent_note`. Repoaxis does not require every annotation key to have a current node: when a node disappears, its note remains as an orphan until the user or agent explicitly clears it. This prevents source edits, temporary deletions, or index rebuilds from silently destroying authored memory.
+
+New notes can only be attached through the CLI to a node that resolves in the current index. Orphaned notes can be read and cleared by their exact stored node ID.
 
 ## Filesystem projection
 
