@@ -34,6 +34,7 @@
       "properties": {
         "nodes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/node" } },
         "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
+        "git_changes": { "type": "array", "items": { "$ref": "#/$defs/gitChange" } },
         "refresh": {
           "type": "object",
           "required": ["reason"],
@@ -53,6 +54,47 @@
     }
   },
   "$defs": {
+    "gitState": {
+      "type": "object",
+      "required": ["tracked", "working", "staged", "conflicted"],
+      "additionalProperties": false,
+      "properties": {
+        "tracked": { "type": "boolean" },
+        "working": { "enum": ["clean", "modified", "added", "deleted", "renamed", "copied", "type-changed", "untracked", "conflicted"] },
+        "staged": {
+          "oneOf": [
+            { "const": false },
+            { "enum": ["modified", "added", "deleted", "renamed", "copied", "type-changed", "conflicted"] }
+          ]
+        },
+        "conflicted": { "type": "boolean" },
+        "rename_from": { "type": "string", "minLength": 1 },
+        "copy_from": { "type": "string", "minLength": 1 },
+        "similarity": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "conflict_code": { "type": "string", "minLength": 2, "maxLength": 2 }
+      }
+    },
+    "gitChange": {
+      "type": "object",
+      "required": ["path", "tracked", "working", "staged", "conflicted"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "tracked": { "type": "boolean" },
+        "working": { "enum": ["clean", "modified", "added", "deleted", "renamed", "copied", "type-changed", "untracked", "conflicted"] },
+        "staged": {
+          "oneOf": [
+            { "const": false },
+            { "enum": ["modified", "added", "deleted", "renamed", "copied", "type-changed", "conflicted"] }
+          ]
+        },
+        "conflicted": { "type": "boolean" },
+        "rename_from": { "type": "string", "minLength": 1 },
+        "copy_from": { "type": "string", "minLength": 1 },
+        "similarity": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "conflict_code": { "type": "string", "minLength": 2, "maxLength": 2 }
+      }
+    },
     "node": {
       "type": "object",
       "required": ["id", "type", "path"],
@@ -74,7 +116,7 @@
           "additionalProperties": false,
           "required": ["start_line", "start_column", "end_line", "end_column", "signature"]
         },
-        "git": { "type": "object" },
+        "git": { "$ref": "#/$defs/gitState" },
         "meta": { "type": "object" }
       },
       "additionalProperties": false,
