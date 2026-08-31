@@ -1,8 +1,12 @@
 # Repoaxis CLI
 
-## Index selection
+## Index selection and freshness
 
-Structural query and annotation commands operate on the current index snapshot. By default Repoaxis resolves the Git root from the current directory and reads `<git-root>/.repoaxis.json`. Use `--index FILE` to operate on another index. These commands do not refresh the index automatically.
+Operational query and annotation commands use the default `<git-root>/.repoaxis.json` as a live derived index. Before reading it, Repoaxis checks a fingerprint built from the installed tool version, Git HEAD/ref, dirty/untracked file content, staged index state, and Git working-tree status. If the index is missing or stale, Repoaxis rebuilds it before answering.
+
+Use `--index FILE` to select an explicit snapshot. An explicit index is validated but is not automatically refreshed; this keeps fixtures, exported snapshots, and historical comparisons reproducible.
+
+`validate` and `summary` are diagnostic commands and never rebuild their input.
 
 ## Commands
 
@@ -69,6 +73,14 @@ Orphaned notes are preserved intentionally so a rebuild or temporary structural 
 
 ### `repoaxis node-id TYPE PATH [QUALIFIED_NAME]`
 Produces the canonical deterministic node ID for a folder, file, class, or function.
+
+## Refresh behavior
+
+The generated index stores `generated.refresh.fingerprint`. Default operational commands compare it against current repository state. Refresh reasons are recorded as `query:index-missing`, `query:tool-version-changed`, `query:head-changed`, `query:head-ref-changed`, or `query:working-tree-changed`.
+
+Repoaxis hashes content only for paths Git already reports as changed or untracked, and hashes staged index records for staged/conflicted paths. Clean tracked files are represented by Git HEAD plus status, avoiding a full-repository content hash on every query. The generated index path itself is excluded so rebuilding or editing annotations does not cause self-triggered refresh loops.
+
+There is no always-on background daemon in this behavior.
 
 ## Target resolution
 
