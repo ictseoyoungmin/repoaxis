@@ -46,6 +46,9 @@ test("viewer serves the structural UI and a fresh read-only index over loopback"
     assert.match(html, /Repoaxis/);
     assert.match(html, /data-tab="structure"/);
     assert.match(html, /data-tab="dependencies"/);
+    assert.match(html, /data-tab="changes"/);
+    assert.match(html, /generated\?\.git_changes/);
+    assert.match(html, /staged \$\{h\(n\.git\.staged\)\}/);
     assert.match(html, /data-tab="graph"/);
     assert.doesNotMatch(html, /type="file"/);
 
