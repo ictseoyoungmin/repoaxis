@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.1 — 2026-09-01
+
+- Enabled npm Trusted Publishing through the existing tag-triggered GitHub Actions release workflow using OIDC (`id-token: write`) instead of a long-lived npm publish token.
+- Publish the exact tested `dist/release/repoaxis-${VERSION}.tgz` artifact to npm so GitHub Release and npm consume the same prepared package.
+- Added release preflight/tests that require the npm registry URL and OIDC permission while rejecting `NPM_TOKEN`, `NODE_AUTH_TOKEN`, and npm publish secrets.
+- Added safe rerun behavior: already-published npm versions are skipped and existing GitHub Release assets are replaced with `gh release upload --clobber`.
+- Added operator documentation for configuring the `ictseoyoungmin/repoaxis` + `release.yml` Trusted Publisher relationship.
+
 ## 0.12.0 — 2026-08-31
 
 - Added `repoaxis unreferenced` as a conservative JavaScript file projection for nodes with no incoming repository-local `imports` edge; the output explicitly warns that candidates are not dead-code findings.
@@ -73,7 +81,7 @@
 - Added exact file-level Git state from porcelain v2 for clean, modified, added, deleted, renamed, copied, untracked, staged, type-changed, and conflicted paths.
 - Added top-level `file-node.git` data with independent working-tree and staged state instead of encoding status as presentation colors.
 - Added `generated.git_changes` so changed paths remain queryable even when a current filesystem node is absent, such as tracked deletions.
-- Added rename/copy source path, similarity, and merge-conflict code metadata where Git reports them.
+- Added rename/copy source path, similarity, and merge-conflict code metadata where Git reports it.
 - Kept generated output paths out of Git change projection so rebuilding `.repoaxis.json` remains deterministic even when the output itself is untracked.
 - Added real-repository coverage for mixed staged/working changes, renames, deletions, untracked files, conflicts, and deterministic rebuild behavior.
 
