@@ -1,5 +1,0 @@
-{
-  "tag": "v0.12.1",
-  "attempt": 2,
-  "purpose": "Resume the one-time verification release after correcting npm E404 handling."
-}
