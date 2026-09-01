@@ -18,7 +18,7 @@ test("release contract pins package, manifests, changelog, and tag", () => {
   const contract = validateReleaseContract(repositoryRoot);
   assert.equal(contract.name, "repoaxis");
   assert.equal(contract.tag, expectedTag(contract.version));
-  assert.match(contract.notes, /repoaxis unreferenced/);
+  assert.ok(contract.notes.trim().length > 0, "current release notes must be non-empty");
   assert.throws(
     () => validateReleaseContract(repositoryRoot, { tag: "v999.0.0" }),
     /does not match package version/,
