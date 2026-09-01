@@ -67,8 +67,14 @@ export function validateReleaseContract(root, { tag = null } = {}) {
   if (!workflow.includes("npm view \"${NAME}@${VERSION}\" version")) {
     throw new Error("release workflow must guard reruns against already-published versions");
   }
+  if (!workflow.includes('"code": "E404"')) {
+    throw new Error("release workflow must recognize npm E404 as an unpublished version");
+  }
   if (!workflow.includes("gh release create") || !workflow.includes("gh release upload")) {
     throw new Error("release workflow must support idempotent GitHub Release creation/upload");
+  }
+  if (workflow.includes("p04-release-request") || fs.existsSync(path.join(root, "dev/reports/p04-release-request.json"))) {
+    throw new Error("temporary release bootstrap must not remain after trusted-publishing verification");
   }
 
   return { name: pkg.name, version: pkg.version, tag: releaseTag, notes, repository_url: pkg.repository.url };

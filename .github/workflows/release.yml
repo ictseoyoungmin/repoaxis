@@ -4,10 +4,6 @@ on:
   push:
     tags:
       - "v*"
-    branches:
-      - main
-    paths:
-      - "dev/reports/p04-release-request.json"
 
 permissions:
   contents: write
@@ -32,44 +28,16 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
 
-      - name: Resolve release tag
-        id: release
-        shell: bash
-        run: |
-          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
-            TAG="$GITHUB_REF_NAME"
-          else
-            VERSION="$(node -p "require('./package.json').version")"
-            TAG="v${VERSION}"
-            REQUEST="$(node -p "require('./dev/reports/p04-release-request.json').tag")"
-            if [[ "$REQUEST" != "$TAG" ]]; then
-              echo "Release request $REQUEST does not match package version $TAG" >&2
-              exit 1
-            fi
-            if git rev-parse "$TAG" >/dev/null 2>&1; then
-              git merge-base --is-ancestor "$TAG" "$GITHUB_SHA"
-              echo "Resuming existing release tag $TAG from current main."
-            else
-              git tag "$TAG" "$GITHUB_SHA"
-              git push origin "refs/tags/$TAG"
-            fi
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
       - name: Require tag commit on main history
-        env:
-          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
           git fetch origin main --tags
-          git merge-base --is-ancestor "$RELEASE_TAG" origin/main
+          git merge-base --is-ancestor "$GITHUB_REF_NAME" origin/main
 
       - run: npm ci
       - run: npm run check
 
       - name: Prepare release assets
-        env:
-          RELEASE_TAG: ${{ steps.release.outputs.tag }}
-        run: node dev/tools/prepare-release.mjs --tag "$RELEASE_TAG" --out dist/release
+        run: node dev/tools/prepare-release.mjs --tag "$GITHUB_REF_NAME" --out dist/release
 
       - name: Publish npm package with trusted publishing
         shell: bash
@@ -102,20 +70,19 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" \
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" \
               dist/release/repoaxis-*.tgz \
               dist/release/repoaxis-*.tgz.sha256 \
               dist/release/release-manifest.json \
               --clobber
           else
-            gh release create "$RELEASE_TAG" \
+            gh release create "$GITHUB_REF_NAME" \
               dist/release/repoaxis-*.tgz \
               dist/release/repoaxis-*.tgz.sha256 \
               dist/release/release-manifest.json \
               --verify-tag \
-              --title "Repoaxis $RELEASE_TAG" \
+              --title "Repoaxis $GITHUB_REF_NAME" \
               --notes-file dist/release/release-notes.md
           fi
