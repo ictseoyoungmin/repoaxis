@@ -47,18 +47,21 @@ jobs:
               exit 1
             fi
             if git rev-parse "$TAG" >/dev/null 2>&1; then
-              echo "Tag $TAG already exists; bootstrap request is no longer valid." >&2
-              exit 1
+              git merge-base --is-ancestor "$TAG" "$GITHUB_SHA"
+              echo "Resuming existing release tag $TAG from current main."
+            else
+              git tag "$TAG" "$GITHUB_SHA"
+              git push origin "refs/tags/$TAG"
             fi
-            git tag "$TAG" "$GITHUB_SHA"
-            git push origin "refs/tags/$TAG"
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Require tag commit on main history
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
-          git fetch origin main
-          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+          git fetch origin main --tags
+          git merge-base --is-ancestor "$RELEASE_TAG" origin/main
 
       - run: npm ci
       - run: npm run check
@@ -73,15 +76,28 @@ jobs:
         run: |
           NAME="$(node -p "require('./package.json').name")"
           VERSION="$(node -p "require('./package.json').version")"
-          PUBLISHED="$(npm view "${NAME}@${VERSION}" version --json 2>/dev/null || true)"
-          if [[ "$PUBLISHED" == "\"${VERSION}\"" || "$PUBLISHED" == "$VERSION" ]]; then
-            echo "${NAME}@${VERSION} is already published; skipping npm publish."
-          elif [[ -n "$PUBLISHED" && "$PUBLISHED" != "null" ]]; then
+          set +e
+          PUBLISHED="$(npm view "${NAME}@${VERSION}" version --json 2>/dev/null)"
+          VIEW_STATUS=$?
+          set -e
+
+          if [[ $VIEW_STATUS -eq 0 ]]; then
+            if [[ "$PUBLISHED" == "\"${VERSION}\"" || "$PUBLISHED" == "$VERSION" ]]; then
+              echo "${NAME}@${VERSION} is already published; skipping npm publish."
+              exit 0
+            fi
             echo "Unexpected npm registry response for ${NAME}@${VERSION}: $PUBLISHED" >&2
             exit 1
-          else
-            npm publish "dist/release/repoaxis-${VERSION}.tgz" --access public
           fi
+
+          if [[ "$PUBLISHED" == *'"code": "E404"'* || "$PUBLISHED" == *'"code":"E404"'* ]]; then
+            echo "${NAME}@${VERSION} is not published yet; continuing with trusted publishing."
+          else
+            echo "Unable to determine npm publication state for ${NAME}@${VERSION}: $PUBLISHED" >&2
+            exit 1
+          fi
+
+          npm publish "dist/release/repoaxis-${VERSION}.tgz" --access public
 
       - name: Create GitHub Release
         env:
