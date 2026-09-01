@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 concurrency:
   group: repoaxis-release-${{ github.ref }}
@@ -24,6 +25,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
+          registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
 
       - name: Require tag commit on main history
@@ -37,14 +39,37 @@ jobs:
       - name: Prepare release assets
         run: node dev/tools/prepare-release.mjs --tag "$GITHUB_REF_NAME" --out dist/release
 
+      - name: Publish npm package with trusted publishing
+        shell: bash
+        run: |
+          NAME="$(node -p "require('./package.json').name")"
+          VERSION="$(node -p "require('./package.json').version")"
+          PUBLISHED="$(npm view "${NAME}@${VERSION}" version --json 2>/dev/null || true)"
+          if [[ "$PUBLISHED" == "\"${VERSION}\"" || "$PUBLISHED" == "$VERSION" ]]; then
+            echo "${NAME}@${VERSION} is already published; skipping npm publish."
+          elif [[ -n "$PUBLISHED" && "$PUBLISHED" != "null" ]]; then
+            echo "Unexpected npm registry response for ${NAME}@${VERSION}: $PUBLISHED" >&2
+            exit 1
+          else
+            npm publish "dist/release/repoaxis-${VERSION}.tgz" --access public
+          fi
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            dist/release/repoaxis-*.tgz \
-            dist/release/repoaxis-*.tgz.sha256 \
-            dist/release/release-manifest.json \
-            --verify-tag \
-            --title "Repoaxis $GITHUB_REF_NAME" \
-            --notes-file dist/release/release-notes.md
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" \
+              dist/release/repoaxis-*.tgz \
+              dist/release/repoaxis-*.tgz.sha256 \
+              dist/release/release-manifest.json \
+              --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              dist/release/repoaxis-*.tgz \
+              dist/release/repoaxis-*.tgz.sha256 \
+              dist/release/release-manifest.json \
+              --verify-tag \
+              --title "Repoaxis $GITHUB_REF_NAME" \
+              --notes-file dist/release/release-notes.md
+          fi
