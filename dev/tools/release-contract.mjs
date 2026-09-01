@@ -52,10 +52,24 @@ export function validateReleaseContract(root, { tag = null } = {}) {
   if (tag !== null && tag !== releaseTag) throw new Error(`release tag ${tag} does not match package version ${releaseTag}`);
   const notes = extractReleaseNotes(changelog, pkg.version);
   if (!workflow) throw new Error(".github/workflows/release.yml is missing");
-  if (/\bnpm\s+(?:--[^\s]+\s+)*publish\b/.test(workflow)) {
-    throw new Error("release workflow must not publish to npm before trusted publishing is enabled");
+  if (!/^\s*id-token:\s*write\s*$/m.test(workflow)) {
+    throw new Error("release workflow must grant id-token: write for npm trusted publishing");
   }
-  if (!workflow.includes("gh release create")) throw new Error("release workflow must create a GitHub Release");
+  if (!/registry-url:\s*['\"]https:\/\/registry\.npmjs\.org['\"]/.test(workflow)) {
+    throw new Error("release workflow must configure the npmjs registry URL");
+  }
+  if (!/npm\s+publish\s+["']dist\/release\/repoaxis-\$\{VERSION\}\.tgz["']\s+--access\s+public/.test(workflow)) {
+    throw new Error("release workflow must publish the prepared release tarball to npm");
+  }
+  if (/NPM_TOKEN|NODE_AUTH_TOKEN|secrets\.NPM/i.test(workflow)) {
+    throw new Error("release workflow must not use long-lived npm publish tokens");
+  }
+  if (!workflow.includes("npm view \"${NAME}@${VERSION}\" version")) {
+    throw new Error("release workflow must guard reruns against already-published versions");
+  }
+  if (!workflow.includes("gh release create") || !workflow.includes("gh release upload")) {
+    throw new Error("release workflow must support idempotent GitHub Release creation/upload");
+  }
 
   return { name: pkg.name, version: pkg.version, tag: releaseTag, notes, repository_url: pkg.repository.url };
 }
