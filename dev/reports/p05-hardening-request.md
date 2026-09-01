@@ -1,0 +1,1 @@
+Apply the P05 human-viewer hardening found by the registry dogfood run.
