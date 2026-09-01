@@ -16,12 +16,12 @@ Run Repoaxis **from the Git repository you want to inspect**:
 
 ```bash
 cd /path/to/your-repository
-npx repoaxis doctor
-npx repoaxis build
-npx repoaxis summary
-npx repoaxis changed
-npx repoaxis unreferenced
-npx repoaxis view
+npx -y repoaxis@latest doctor
+npx -y repoaxis@latest build
+npx -y repoaxis@latest summary
+npx -y repoaxis@latest changed
+npx -y repoaxis@latest unreferenced
+npx -y repoaxis@latest view
 ```
 
 `build` writes `.repoaxis.json` at the Git root. `summary`, `changed`, and `unreferenced` give useful repository-wide orientation without opening source files, and `view` opens the read-only localhost human surface.
@@ -29,9 +29,9 @@ npx repoaxis view
 When you know or can search for a target, narrow before reading source:
 
 ```bash
-npx repoaxis find parseConfig
-npx repoaxis context parseConfig
-npx repoaxis why parseConfig
+npx -y repoaxis@latest find parseConfig
+npx -y repoaxis@latest context parseConfig
+npx -y repoaxis@latest why parseConfig
 ```
 
 Replace `parseConfig` with a symbol or path from your repository. `context` gives the containing file, source range, Git state, imports, reverse imports, and annotations without embedding the source text. `why` gives bounded structural provenance from canonical `imports` and `contains` edges.
@@ -67,7 +67,7 @@ For local Claude Code development, see `docs/installation.md`. The CLI remains i
 
 ## Human viewer
 
-`repoaxis view` starts a read-only structural viewer on `127.0.0.1`. It shows the canonical folder/file/class/function tree, Git status and last-file commit context, stored annotations, repository-local imports and reverse imports, and a bounded dependency graph. The browser polls the local viewer API while open, and the API reuses Repoaxis freshness checks so the view follows the working tree without an always-on daemon.
+`repoaxis view` starts a read-only structural viewer on `127.0.0.1`. It shows the canonical folder/file/class/function tree, distinct working/staged Git badges, a complete Changes surface including deleted paths, last-file commit context, stored annotations, repository-local imports and reverse imports, and a bounded dependency graph. The browser polls the local viewer API while open, and the API reuses Repoaxis freshness checks so the view follows the working tree without an always-on daemon.
 
 ## Distribution surfaces
 

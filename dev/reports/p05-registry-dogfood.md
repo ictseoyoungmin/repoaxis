@@ -1,6 +1,6 @@
 # P05 · Registry Install & Public Onboarding
 
-Status: REVIEW
+Status: CLOSED
 
 ## External dogfood
 
@@ -46,4 +46,4 @@ No new repository model or mutation path is introduced. The viewer remains a pro
 
 ## Closure gate
 
-Close P05 after the hardening PR passes the full repository CI. A later public package release can re-run the same registry dogfood to capture the hardened `#changes` surface from npm.
+P05 hardening passed full repository CI and merged in PR #21. Release 0.12.2 publishes that hardened viewer so a registry-only follow-up can capture the complete `#changes` surface from the public package.

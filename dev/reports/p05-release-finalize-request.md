@@ -1,1 +1,0 @@
-Finalize P05 release notes and public onboarding for 0.12.2.
