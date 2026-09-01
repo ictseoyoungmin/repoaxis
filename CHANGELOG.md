@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.2 — 2026-09-01
+
+- Hardened the human viewer after public-registry dogfooding exposed a Git-state projection gap.
+- Added a read-only **Changes** surface backed directly by `generated.git_changes`, including deleted paths that no longer have current filesystem nodes.
+- Structure badges now distinguish working-tree changes from staged changes instead of collapsing them into one generic modified badge.
+- Added `#structure`, `#dependencies`, `#changes`, and `#graph` deep links for the local viewer.
+- Verified the public npm first-run path in a clean external Git repository using `npx -y repoaxis@0.12.1`, covering CLI queries, refresh, durable annotations, index recreation, and live viewer capture.
+- Updated public onboarding examples to use non-interactive `npx -y repoaxis@latest` for agent-friendly first runs.
+
 ## 0.12.1 — 2026-09-01
 
 - Enabled npm Trusted Publishing through the existing tag-triggered GitHub Actions release workflow using OIDC (`id-token: write`) instead of a long-lived npm publish token.

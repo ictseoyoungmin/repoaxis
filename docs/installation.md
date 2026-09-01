@@ -8,9 +8,9 @@ Without a permanent install:
 
 ```bash
 cd /path/to/your-repository
-npx repoaxis doctor
-npx repoaxis build
-npx repoaxis summary
+npx -y repoaxis@latest doctor
+npx -y repoaxis@latest build
+npx -y repoaxis@latest summary
 ```
 
 Or install globally:
