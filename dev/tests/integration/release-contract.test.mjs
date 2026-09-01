@@ -25,6 +25,20 @@ test("release contract pins package, manifests, changelog, and tag", () => {
   );
 });
 
+test("release workflow uses tokenless OIDC trusted publishing", () => {
+  const workflow = fs.readFileSync(
+    path.join(repositoryRoot, ".github/workflows/release.yml"),
+    "utf8",
+  );
+
+  assert.match(workflow, /^\s*id-token:\s*write\s*$/m);
+  assert.match(workflow, /registry-url:\s*['\"]https:\/\/registry\.npmjs\.org['\"]/);
+  assert.match(workflow, /npm publish "dist\/release\/repoaxis-\$\{VERSION\}\.tgz" --access public/);
+  assert.match(workflow, /npm view "\$\{NAME\}@\$\{VERSION\}" version/);
+  assert.doesNotMatch(workflow, /NPM_TOKEN|NODE_AUTH_TOKEN|secrets\.NPM/i);
+  assert.match(workflow, /gh release upload .*--clobber/s);
+});
+
 test("release preparation emits tarball, checksum, manifest, and notes", () => {
   const output = fs.mkdtempSync(path.join(os.tmpdir(), "repoaxis-release-test-"));
   try {
