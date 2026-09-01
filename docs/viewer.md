@@ -13,12 +13,15 @@ repoaxis view --root ../another-repository
 
 The viewer uses the same canonical `.repoaxis.json` data as the CLI. It does not maintain a second repository model.
 
-- **Structure** — folder, file, class, and function containment with Git-state badges and symbol signatures.
+- **Structure** — folder, file, class, and function containment with Git-state badges and symbol signatures. Working-tree and staged changes are distinguished instead of being collapsed into one generic modified state.
 - **Dependencies** — repository-local `imports` and derived `imported_by` relationships, plus a bounded reverse-dependency tree.
+- **Changes** — the complete `generated.git_changes` projection, including staged, unstaged, untracked, conflicted, and deleted paths. Deleted paths remain visible here even though they no longer have a current filesystem node.
 - **Graph** — file-level canonical import edges. Repositories with more than 80 indexed files use a bounded focus around the selected file rather than trying to draw an unreadable whole-repository graph.
 - **Inspector** — deterministic node identity, source range, exact current-file Git state, exact last-file commit context, dependency counts, and stored annotations.
 
 The viewer is read-only. Annotation writes remain explicit CLI operations through `repoaxis note`.
+
+The four main surfaces can also be deep-linked with URL fragments such as `#structure`, `#dependencies`, `#changes`, and `#graph` while the local viewer is running.
 
 ## Freshness
 
