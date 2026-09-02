@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.0 — 2026-09-02
+
+- Added `repoaxis snapshot [--root PATH] [--output FILE]` to export the canonical Repoaxis product viewer as one self-contained frozen HTML artifact.
+- Snapshot export reuses the exact packaged viewer HTML, CSS, JavaScript, and the same read-only `/api/index`, `/api/meta`, and `/api/history` responses through an ephemeral loopback viewer instead of maintaining a second renderer or repository model.
+- Frozen snapshots preserve Structure, Dependencies, Changes, Graph, Inspector, Git overlays, search, cross-view selection, and hash navigation while intentionally stopping freshness updates at capture time.
+- Opening an exported snapshot no longer requires a Repoaxis server and does not fetch repository data or viewer assets over the network; captured repository links remain explicit user-initiated navigation.
+- Integrated `snapshot` into the canonical CLI dispatcher and help surface instead of keeping a separate binary special case.
+- Added integration coverage for standalone asset inlining, embedded canonical index/Git state, import edges, dirty working-tree state, and the public `repoaxis snapshot` command path.
+
 ## 0.13.0 — 2026-09-02
 
 - Replaced the MVP human viewer with the new Repoaxis product shell while keeping Git plus the working tree as the only authority and `.repoaxis.json` as the rebuildable canonical index projection.
