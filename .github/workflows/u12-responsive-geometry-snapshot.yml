@@ -1,4 +1,4 @@
-name: u12-responsive-geometry-snapshot-final2
+name: u12-responsive-geometry-diagnostic
 on:
   push:
     branches: [feat/u12-responsive-geometry-reconciliation]
@@ -28,16 +28,4 @@ jobs:
           done
           cat /tmp/repoaxis-viewer.log
           exit 1
-      - run: node bin/repoaxis snapshot --output u12-responsive-geometry.html
-      - run: node dev/tools/capture-u12-responsive-geometry.mjs
-      - uses: actions/upload-artifact@v4
-        with:
-          name: u12-responsive-geometry-final2
-          path: |
-            u12-structure-before.png
-            u12-structure-drawer-open.png
-            u12-dependencies-drawer-open.png
-            u12-graph-drawer-open.png
-            u12-graph-resized.png
-            u12-responsive-geometry.html
-          retention-days: 7
+      - run: node dev/tools/diag-u12-dependencies.mjs
