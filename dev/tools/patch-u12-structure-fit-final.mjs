@@ -10,9 +10,8 @@ fs.writeFileSync(viewer,src);
 
 const test='dev/tests/integration/viewer-responsive-geometry.test.mjs';
 let t=fs.readFileSync(test,'utf8');
-if(!t.includes("Whole Structure chooses a readable initial overview scale once"))throw new Error('Expected U12 Structure test not found');
-t=t.replace(
-  "assert.match(viewer1, /scale=Math\.max\(\.72,Math\.min\(1,fit\)\)/);",
-  "assert.match(viewer1, /scale=Math\.min\(1,fit\)/);\n  assert.doesNotMatch(viewer1, /scale=Math\.max\(\.72,Math\.min\(1,fit\)\)/);"
-);
+const oldAssertion="assert.ok(s1.includes('Math.max(.72,Math.min(1,fit))'));";
+const newAssertions="assert.ok(s1.includes('scale=Math.min(1,fit)'));\n  assert.ok(!s1.includes('Math.max(.72,Math.min(1,fit))'));";
+if(!t.includes(oldAssertion))throw new Error('Expected old Structure fit assertion not found');
+t=t.replace(oldAssertion,newAssertions);
 fs.writeFileSync(test,t);
