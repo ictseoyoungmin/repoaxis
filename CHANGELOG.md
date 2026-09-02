@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.13.0 — 2026-09-02
+
+- Replaced the MVP human viewer with the new Repoaxis product shell while keeping Git plus the working tree as the only authority and `.repoaxis.json` as the rebuildable canonical index projection.
+- Removed repository fixtures, hard-coded repository/branch/commit values, fake LOC/complexity metrics, prototype source previews, and non-functional Settings/Help/More controls from the shipped viewer.
+- Connected Structure, Dependencies, Changes, Graph, global search, cross-view selection continuity, the inspector, working-tree/last-commit overlays, change-set impact analysis, and propagation tracing to live Repoaxis/Git data.
+- Added adaptive containment and file-graph layouts, a meaningful default dependency/graph root chosen from actual connectivity, bounded dependency traversal with repeated-route/cycle markers, and large-repository graph bounding.
+- Added read-only `GET /api/meta` and `GET /api/history` loopback endpoints for actual Git remote display metadata and the current HEAD commit/change set; source contents and mutation endpoints remain absent.
+- Expanded viewer integration tests to compile the split browser runtime, verify every packaged viewer asset, exercise the new read-only APIs, reject fixture/placeholder regressions, and preserve automatic freshness after working-tree edits.
+- Visually dogfooded Structure, Dependencies, Changes, and Graph in a clean representative Git repository using headless Chrome, including staged, working, untracked, and deleted paths.
+
 ## 0.12.2 — 2026-09-01
 
 - Hardened the human viewer after public-registry dogfooding exposed a Git-state projection gap.
