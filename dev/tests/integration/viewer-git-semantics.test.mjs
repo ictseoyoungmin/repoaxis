@@ -38,6 +38,7 @@ test("mixed staged and working state has one canonical mixed presentation", () =
   assert.match(context.changeMeta(change), /working modified/);
   assert.match(context.changeMeta(change), /from old\.js/);
   assert.match(context.badgeSvg("mixed", 0, 0), />S\+W<\/text>/);
+  assert.equal(context.nodeGitText({ type: "file", git: change }), "staged renamed · working modified");
 });
 
 test("conflict presentation stays compact while retaining exact conflict detail", () => {
@@ -48,6 +49,7 @@ test("conflict presentation stays compact while retaining exact conflict detail"
   assert.equal(context.stageText(change), "Conflicted");
   assert.equal(context.changeMeta(change), "conflict UU");
   assert.match(context.badgeSvg("conflict", 0, 0), />!<\/text>/);
+  assert.match(context.nodeGitText({ type: "file", git: change }), /conflict UU/);
 });
 
 test("single-lane changes retain their operation code and exact lane detail", () => {
