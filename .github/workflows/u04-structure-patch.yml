@@ -20,6 +20,7 @@ jobs:
         with:
           node-version: 24
       - run: node dev/tools/patch-u04-structure.mjs
+      - run: sed -i 's/\${ri}/\${i}/g' dev/tests/integration/viewer-structure-projection.test.mjs
       - run: npm ci
       - run: npm run check
       - name: Commit U04 product changes
