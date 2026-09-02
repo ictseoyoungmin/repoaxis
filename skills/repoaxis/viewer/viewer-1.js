@@ -64,11 +64,17 @@ function treeLayout(projection){
   for(const id of Object.keys(pos))pos[id]=[100+pos[id][0]*gap,80+pos[id][1]*row];
   return{W,H,pos}
 }
+function structureGitMarkup(summary,x,y){
+  if(!summary)return'';
+  if(summary.history)return`<text class="macro-git-line" x="${x+24}" y="${y+16}"><tspan class="git-history">HEAD ${summary.changed}</tspan></text>`;
+  const parts=[];if(summary.staged)parts.push(['staged',`S ${summary.staged}`]);if(summary.working)parts.push(['working',`W ${summary.working}`]);if(summary.conflicts)parts.push(['conflict',`! ${summary.conflicts}`]);
+  return parts.length?`<text class="macro-git-line" x="${x+24}" y="${y+16}">${parts.map((p,i)=>`<tspan class="git-${p[0]}"${i?' dx="8"':''}>${p[1]}</tspan>`).join('')}</text>`:''
+}
 function structureCard(n,x,y,projection){
   if(projection.mode==='overview'){
-    const code=statusFor(n.id),desc=structureDescendants(n.id).length,base=n.type==='root'?10:n.type==='folder'?7:n.type==='file'?5:4,r=Math.min(13,base+Math.log2(desc+1)*.8);
-    const label=n.label.length>18?n.label.slice(0,17)+'…':n.label;
-    return`<g class="node macro-node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}" role="button" tabindex="0" aria-label="Inspect ${esc(n.label)}; ${desc} descendant${desc===1?'':'s'}"><title>${esc(n.label)} · ${desc} descendant${desc===1?'':'s'} · select to inspect · double-click to explore</title><rect class="macro-target" x="${x-22}" y="${y-17}" width="184" height="34" rx="13" fill="transparent"/><circle class="macro-dot" cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${code?colorFor(code)[0]:'#fff'}" stroke="${state.selected===n.id?'#625bff':(n.type==='root'||n.type==='folder'?'#817aff':'#cdd3df')}" stroke-width="${state.selected===n.id?2:1.25}"/><circle class="macro-hit" cx="${x}" cy="${y}" r="${Math.max(22,r+10)}"/><text class="macro-label" x="${x+24}" y="${y+4}">${esc(label)}${desc?`<tspan class="macro-count" dx="6">${desc}</tspan>`:''}</text></g>`
+    const code=statusFor(n.id),git=gitScopeSummary(n.id),gitLabel=gitScopeLabel(git),desc=structureDescendants(n.id).length,base=n.type==='root'?10:n.type==='folder'?7:n.type==='file'?5:4,r=Math.min(13,base+Math.log2(desc+1)*.8);
+    const label=n.label.length>18?n.label.slice(0,17)+'…':n.label,scopeText=gitLabel?` · ${gitLabel}`:'';
+    return`<g class="node macro-node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}" role="button" tabindex="0" aria-label="Inspect ${esc(n.label)}; ${desc} descendant${desc===1?'':'s'}${esc(scopeText)}"><title>${esc(n.label)} · ${desc} descendant${desc===1?'':'s'}${esc(scopeText)} · select to inspect · double-click to explore</title><rect class="macro-target" x="${x-22}" y="${y-22}" width="184" height="44" rx="13" fill="transparent"/><circle class="macro-dot" cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${code?colorFor(code)[0]:'#fff'}" stroke="${state.selected===n.id?'#625bff':(n.type==='root'||n.type==='folder'?'#817aff':'#cdd3df')}" stroke-width="${state.selected===n.id?2:1.25}"/><circle class="macro-hit" cx="${x}" cy="${y}" r="${Math.max(22,r+10)}"/><text class="macro-label" x="${x+24}" y="${git?y-1:y+4}">${esc(label)}${desc?`<tspan class="macro-count" dx="6">${desc}</tspan>`:''}</text>${structureGitMarkup(git,x,y)}</g>`
   }
   const code=statusFor(n.id),hidden=projection.hiddenByNode?.get(n.id)||0,w=n.type==='function'||n.type==='class'?202:190,h=42,left=x-w/2,iconTxt=n.type==='folder'||n.type==='root'?'▱':n.type==='file'?'◇':n.type==='class'?'C':'ƒ';
   return`<g class="node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}"><rect class="bg" x="${left}" y="${y-h/2}" width="${w}" height="${h}" rx="10"/><text x="${left+14}" y="${y+4}" fill="#625bff">${iconTxt}</text><text x="${left+34}" y="${y+4}">${esc(n.label.length>24?n.label.slice(0,23)+'…':n.label)}</text>${hidden?`<text class="sub" x="${left+w-42}" y="${y+4}">+${hidden}</text>`:''}${badgeSvg(code,left+w-24,y-8)}</g>`
