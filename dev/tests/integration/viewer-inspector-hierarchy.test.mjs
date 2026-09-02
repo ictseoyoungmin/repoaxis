@@ -7,11 +7,10 @@ const VIEWER = fileURLToPath(new URL("../../../skills/repoaxis/viewer/viewer-4.j
 const source = fs.readFileSync(VIEWER, "utf8");
 
 test("Overview prioritizes current state and indexed facts before provenance and notes", () => {
-  const overviewStart = source.indexOf("if(state.tab==='overview')body=current+facts+lastCommit+note");
-  assert.notEqual(overviewStart, -1);
-  assert.ok(source.indexOf('Current state') < source.indexOf('Indexed facts'));
-  assert.ok(source.indexOf('Indexed facts') < source.indexOf('Last file commit'));
-  assert.ok(source.indexOf('Last file commit') < source.indexOf('Agent note'));
+  assert.match(source, /if\(state\.tab==='overview'\)body=current\+facts\+lastCommit\+note/);
+  for (const label of ["Current state", "Indexed facts", "Last file commit", "Agent note"]) {
+    assert.ok(source.includes(label));
+  }
 });
 
 test("redundant identity details move out of Overview but remain available in Metrics", () => {
