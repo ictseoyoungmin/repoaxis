@@ -9,7 +9,7 @@ const source=fs.readFileSync(VIEWER,'utf8');
 const start=source.indexOf('const GRAPH_VIEWPORT');
 const end=source.indexOf('const GRAPH_NODE_GEOMETRY');
 const helpers=source.slice(start,end);
-function ctx(){const state={camera:{graph:{s:1,x:0,y:0}},graphCameraAnchor:null};const c=vm.createContext({state});vm.runInContext(helpers,c);return c}
+function ctx(){const state={camera:{graph:{s:1,x:0,y:0}},graphCameraAnchor:null};const c=vm.createContext({state,spatialViewportSize:()=>({w:1800,h:1040})});vm.runInContext(helpers,c);return c}
 
 test('large graph keeps a fixed readable viewport instead of shrinking the whole world',()=>{const c=ctx(),list=Array.from({length:80},(_,i)=>({id:'file:'+i,repoPath:'skills/f'+String(i).padStart(2,'0')+'.mjs'})),L=c.graphLayout(list);assert.equal(L.viewW,1800);assert.equal(L.viewH,1040);assert.ok(L.H>L.viewH);assert.ok(L.W>=L.viewW)});
 test('spacing-first layout preserves readable node center gaps',()=>{const c=ctx(),list=Array.from({length:12},(_,i)=>({id:'file:'+i,repoPath:'skills/f'+i+'.mjs'})),L=c.graphLayout(list),pts=Object.values(L.pos);const xs=[...new Set(pts.map(p=>p[0]))].sort((a,b)=>a-b),ys=[...new Set(pts.map(p=>p[1]))].sort((a,b)=>a-b);assert.ok(xs.length>1&&ys.length>1);assert.ok(Math.min(...xs.slice(1).map((x,i)=>x-xs[i]))>=220);assert.ok(Math.min(...ys.slice(1).map((y,i)=>y-ys[i]))>=112)});
