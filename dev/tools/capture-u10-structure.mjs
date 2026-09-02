@@ -1,3 +1,4 @@
+// U10 final normal-click validation after containment-edge hit-test correction.
 import { chromium } from 'playwright';
 
 const browser=await chromium.launch({headless:true});
