@@ -70,7 +70,7 @@ function structurePrepareCamera(projection,L,vp){
   state.structureCameraAnchor=key;
   if(projection.mode!=='overview')return;
   const pts=Object.values(L.pos);if(!pts.length)return;
-  const minX=Math.min(...pts.map(p=>p[0]))-42,maxX=Math.max(...pts.map(p=>p[0]))+190,minY=Math.min(...pts.map(p=>p[1]))-36,maxY=Math.max(...pts.map(p=>p[1]))+36,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),fit=Math.min((vp.w-48)/contentW,(vp.h-48)/contentH),scale=Math.max(.72,Math.min(1,fit)),cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+  const minX=Math.min(...pts.map(p=>p[0]))-42,maxX=Math.max(...pts.map(p=>p[0]))+190,minY=Math.min(...pts.map(p=>p[1]))-36,maxY=Math.max(...pts.map(p=>p[1]))+36,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),fit=Math.min((vp.w-48)/contentW,(vp.h-48)/contentH),scale=Math.min(1,fit),cx=(minX+maxX)/2,cy=(minY+maxY)/2;
   state.camera.structure={s:scale,x:vp.w/2-cx*scale,y:vp.h/2-cy*scale}
 }
 function structureGitMarkup(summary,x,y){
