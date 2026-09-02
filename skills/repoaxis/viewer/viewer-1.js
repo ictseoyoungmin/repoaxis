@@ -1,7 +1,116 @@
-function treeLayout(){const root=nodes[ROOT];if(!root)return{W:900,H:600,pos:{}};let leaf=0;const pos={},depths={};function walk(id,d){const kids=children(id);depths[id]=d;if(!kids.length){pos[id]=[d,leaf++];return pos[id][1]}const ys=kids.map(k=>walk(k.id,d+1));const y=(Math.min(...ys)+Math.max(...ys))/2;pos[id]=[d,y];return y}walk(ROOT,0);const maxD=Math.max(...Object.values(depths),0),row=state.structureFocus?54:34,gap=state.structureFocus?220:150,W=Math.max(1000,150+maxD*gap+180),H=Math.max(620,90+Math.max(1,leaf-1)*row+90);for(const id of Object.keys(pos)){pos[id]=[80+pos[id][0]*gap,70+pos[id][1]*row]}return{W,H,pos}}
-function structureCard(n,x,y){if(!state.structureFocus){const code=statusFor(n.id),[f,s]=colorFor(code),r=n.type==='folder'||n.type==='root'?7:n.type==='file'?5:4;return`<g class="node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}"><circle cx="${x}" cy="${y}" r="${r}" fill="${code?f:'#fff'}" stroke="${code?s:(n.type==='folder'||n.type==='root'?'#817aff':'#cdd3df')}" stroke-width="${state.selected===n.id?2:1.2}"/><circle cx="${x}" cy="${y}" r="20" fill="transparent"/></g>`}const code=statusFor(n.id),w=n.type==='function'||n.type==='class'?184:166,h=38,left=x-w/2,iconTxt=n.type==='folder'||n.type==='root'?'▱':n.type==='file'?'◇':n.type==='class'?'C':'ƒ';return`<g class="node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}"><rect class="bg" x="${left}" y="${y-h/2}" width="${w}" height="${h}" rx="10"/><text x="${left+14}" y="${y+4}" fill="#625bff">${iconTxt}</text><text x="${left+34}" y="${y+4}">${esc(n.label.length>22?n.label.slice(0,21)+'…':n.label)}</text>${badgeSvg(code,left+w-24,y-8)}</g>`}
-function renderStructure(){const L=treeLayout(),svg=$('#structureSvg');svg.setAttribute('viewBox',`0 0 ${L.W} ${L.H}`);let h='<g id="structureGraph">';for(const n of Object.values(nodes)){if(!n.parent||!L.pos[n.id]||!L.pos[n.parent])continue;const A=L.pos[n.parent],B=L.pos[n.id],a=state.structureFocus?83:0,b=state.structureFocus?83:0,m=(A[0]+a+B[0]-b)/2;h+=`<path class="edge ${state.selected===n.id?'hot':''}" d="M ${A[0]+a} ${A[1]} C ${m} ${A[1]},${m} ${B[1]},${B[0]-b} ${B[1]}"/>`}for(const n of Object.values(nodes))if(L.pos[n.id])h+=structureCard(n,...L.pos[n.id]);h+='</g>';svg.innerHTML=h;$('#structureMode').textContent=state.structureFocus?'Focused containment tree · labels visible':'Whole repository · labels hidden';$('#wholeBtn').hidden=!state.structureFocus;$('#labelsBtn').hidden=state.structureFocus;renderBreadcrumbs();bindNodes(svg);applyCamera();applyFilter()}
-function ancestry(id){const out=[];let n=nodes[id],seen=new Set;while(n&&!seen.has(n.id)){seen.add(n.id);out.unshift(n);n=n.parent?nodes[n.parent]:null}return out}function renderBreadcrumbs(){const b=$('#breadcrumbs');if(!state.structureFocus){b.hidden=true;return}b.hidden=false;b.innerHTML=ancestry(state.selected).map((n,i,a)=>`<button class="crumb ${i===a.length-1?'current':''}" data-id="${esc(n.id)}">${esc(n.label)}</button>${i<a.length-1?'<span>›</span>':''}`).join('');b.querySelectorAll('[data-id]').forEach(x=>x.onclick=()=>select(x.dataset.id))}
+function structureDescendants(id){
+  const out=[],q=[id],seen=new Set([id]);
+  while(q.length){
+    const cur=q.shift();
+    for(const n of children(cur))if(!seen.has(n.id)){seen.add(n.id);out.push(n);q.push(n.id)}
+  }
+  return out
+}
+function structureFocusTarget(id){
+  const n=nodes[id]||nodes[ROOT];
+  if(!n)return ROOT;
+  if(n.type==='class'||n.type==='function')return containingFile(n)?.id||n.parent||ROOT;
+  return n.id
+}
+function structureWithin(id,rootId){
+  let n=nodes[id],seen=new Set;
+  while(n&&!seen.has(n.id)){if(n.id===rootId)return true;seen.add(n.id);n=n.parent?nodes[n.parent]:null}
+  return false
+}
+function structureOverviewProjection(){
+  const visible=new Set([ROOT]),rootKids=children(ROOT);
+  for(const n of rootKids){
+    visible.add(n.id);
+    if(n.type==='folder')for(const c of children(n.id))if(c.type==='folder')visible.add(c.id)
+  }
+  return{root:ROOT,visible,total:Object.keys(nodes).length,hidden:Math.max(0,Object.keys(nodes).length-visible.size),mode:'overview'}
+}
+function structureFocusProjection(rootId){
+  const root=nodes[rootId]||nodes[ROOT],visible=new Set([root.id]),depth=new Map([[root.id,0]]),q=[root.id],limit=96;
+  while(q.length&&visible.size<limit){
+    const id=q.shift(),d=depth.get(id)||0;
+    if(d>=2)continue;
+    for(const n of children(id)){
+      if(visible.size>=limit)break;
+      visible.add(n.id);depth.set(n.id,d+1);q.push(n.id)
+    }
+  }
+  const all=structureDescendants(root.id),hiddenByNode=new Map;
+  for(const id of visible){
+    const hidden=structureDescendants(id).filter(n=>!visible.has(n.id)).length;
+    if(hidden)hiddenByNode.set(id,hidden)
+  }
+  return{root:root.id,visible,total:all.length+1,hidden:Math.max(0,all.length+1-visible.size),hiddenByNode,mode:'focus'}
+}
+function structureProjection(){
+  if(!state.structureFocus)return structureOverviewProjection();
+  const desired=structureFocusTarget(state.selected);
+  if(!state.structureRoot||!nodes[state.structureRoot]||!structureWithin(desired,state.structureRoot))state.structureRoot=desired;
+  return structureFocusProjection(state.structureRoot)
+}
+function treeLayout(projection){
+  const root=nodes[projection.root];if(!root)return{W:900,H:600,pos:{}};
+  const visible=projection.visible,pos={},depths={};let leaf=0;
+  function walk(id,d){
+    const kids=children(id).filter(n=>visible.has(n.id));
+    depths[id]=d;
+    if(!kids.length){pos[id]=[d,leaf++];return pos[id][1]}
+    const ys=kids.map(k=>walk(k.id,d+1)),y=(Math.min(...ys)+Math.max(...ys))/2;
+    pos[id]=[d,y];return y
+  }
+  walk(root.id,0);
+  const maxD=Math.max(...Object.values(depths),0),row=projection.mode==='focus'?58:64,gap=projection.mode==='focus'?230:210,
+    W=Math.max(1000,180+maxD*gap+220),H=Math.max(620,120+Math.max(1,leaf-1)*row+120);
+  for(const id of Object.keys(pos))pos[id]=[100+pos[id][0]*gap,80+pos[id][1]*row];
+  return{W,H,pos}
+}
+function structureCard(n,x,y,projection){
+  if(projection.mode==='overview'){
+    const code=statusFor(n.id),desc=structureDescendants(n.id).length,base=n.type==='root'?10:n.type==='folder'?7:n.type==='file'?5:4,r=Math.min(13,base+Math.log2(desc+1)*.8);
+    return`<g class="node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}"><title>${esc(n.label)} · ${desc} descendant${desc===1?'':'s'}</title><circle cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${code?colorFor(code)[0]:'#fff'}" stroke="${state.selected===n.id?'#625bff':(n.type==='root'||n.type==='folder'?'#817aff':'#cdd3df')}" stroke-width="${state.selected===n.id?2:1.25}"/><circle cx="${x}" cy="${y}" r="${Math.max(22,r+10)}" fill="transparent"/></g>`
+  }
+  const code=statusFor(n.id),hidden=projection.hiddenByNode?.get(n.id)||0,w=n.type==='function'||n.type==='class'?202:190,h=42,left=x-w/2,iconTxt=n.type==='folder'||n.type==='root'?'▱':n.type==='file'?'◇':n.type==='class'?'C':'ƒ';
+  return`<g class="node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}"><rect class="bg" x="${left}" y="${y-h/2}" width="${w}" height="${h}" rx="10"/><text x="${left+14}" y="${y+4}" fill="#625bff">${iconTxt}</text><text x="${left+34}" y="${y+4}">${esc(n.label.length>24?n.label.slice(0,23)+'…':n.label)}</text>${hidden?`<text class="sub" x="${left+w-42}" y="${y+4}">+${hidden}</text>`:''}${badgeSvg(code,left+w-24,y-8)}</g>`
+}
+function enterStructureFocus(id=state.selected||ROOT){
+  const root=structureFocusTarget(id);
+  state.structureFocus=true;state.structureRoot=root;state.selected=id&&nodes[id]?id:root;resetCamera();renderStructure();renderDrawer();updateSelection()
+}
+function leaveStructureFocus(){
+  state.structureFocus=false;state.structureRoot=ROOT;resetCamera();renderStructure()
+}
+function renderStructure(){
+  const projection=structureProjection(),L=treeLayout(projection),svg=$('#structureSvg');
+  svg.setAttribute('viewBox',`0 0 ${L.W} ${L.H}`);
+  let h='<g id="structureGraph">';
+  for(const n of Object.values(nodes)){
+    if(!projection.visible.has(n.id)||!n.parent||!projection.visible.has(n.parent)||!L.pos[n.id]||!L.pos[n.parent])continue;
+    const A=L.pos[n.parent],B=L.pos[n.id],pad=projection.mode==='focus'?95:0,m=(A[0]+pad+B[0]-pad)/2;
+    h+=`<path class="edge ${state.selected===n.id?'hot':''}" d="M ${A[0]+pad} ${A[1]} C ${m} ${A[1]},${m} ${B[1]},${B[0]-pad} ${B[1]}"/>`
+  }
+  for(const id of projection.visible){const n=nodes[id];if(n&&L.pos[id])h+=structureCard(n,...L.pos[id],projection)}
+  h+='</g>';svg.innerHTML=h;
+  const root=nodes[projection.root];
+  $('#structureMode').textContent=projection.mode==='focus'?`${root?.repoPath==='.'||root?.id===ROOT?'Repository':root?.repoPath||root?.label} · ${projection.visible.size}/${projection.total} nodes`:`Repository topology · ${projection.visible.size} macro nodes`;
+  $('#wholeBtn').hidden=projection.mode!=='focus';$('#labelsBtn').hidden=projection.mode==='focus';
+  renderBreadcrumbs();
+  if(projection.mode==='overview'){
+    svg.querySelectorAll('.node[data-id]').forEach(el=>el.onclick=()=>enterStructureFocus(el.dataset.id))
+  }else bindNodes(svg);
+  applyCamera();applyFilter()
+}
+function ancestry(id){
+  const out=[];let n=nodes[id],seen=new Set;
+  while(n&&!seen.has(n.id)){seen.add(n.id);out.unshift(n);n=n.parent?nodes[n.parent]:null}
+  return out
+}
+function renderBreadcrumbs(){
+  const b=$('#breadcrumbs');if(!state.structureFocus){b.hidden=true;return}
+  b.hidden=false;
+  b.innerHTML=ancestry(state.structureRoot).map((n,i,a)=>`<button class="crumb ${i===a.length-1?'current':''}" data-id="${esc(n.id)}">${esc(n.label)}</button>${i<a.length-1?'<span>›</span>':''}`).join('');
+  b.querySelectorAll('[data-id]').forEach(x=>x.onclick=()=>enterStructureFocus(x.dataset.id))
+}
+
 function depProjection(rootId){const rel=state.depDirection==='importedBy'?(id=>importedBy(id)):(id=>imports(id)),seen=new Map([[rootId,'root']]),items=[];let leaf=0,refs=0,cycles=0,truncated=0;function visit(id,d,parent,key,path){const e={id,d,parent,key,type:key==='root'?'root':'node',kids:[],y:0};items.push(e);if(d>=state.depDepth){truncated+=rel(id).length;return e}for(const n of rel(id)){const k=key+'>'+n.id+':'+e.kids.length;if(path.includes(n.id)){const x={id:n.id,d:d+1,parent:key,key:k,type:'cycle',kids:[],y:0};items.push(x);e.kids.push(x);cycles++;continue}if(seen.has(n.id)){const x={id:n.id,d:d+1,parent:key,key:k,type:'ref',kids:[],y:0};items.push(x);e.kids.push(x);refs++;continue}seen.set(n.id,k);const x=visit(n.id,d+1,key,k,[...path,id]);e.kids.push(x)}return e}const root=visit(rootId,0,null,'root',[]);function layout(e){if(!e.kids.length)return e.y=leaf++;const ys=e.kids.map(layout);return e.y=(Math.min(...ys)+Math.max(...ys))/2}layout(root);return{items,refs,cycles,truncated,leaf:Math.max(1,leaf),unique:seen.size-1}}
 function renderDependencies(){const f=nodes[state.depRoot]||mostConnectedFile()||files()[0];if(!f){$('#depShell').innerHTML='<div class="empty">No indexed files.</div>';return}state.depRoot=f.id;if(state.selected===ROOT)state.selected=f.id;const p=depProjection(f.id),W=Math.max(1000,180+p.items.reduce((m,x)=>Math.max(m,x.d),0)*250+180),H=Math.max(480,120+(p.leaf-1)*78+110),rootX=state.depDirection==='importedBy'?W-130:130,sign=state.depDirection==='importedBy'?-1:1,pos=new Map();for(const x of p.items)pos.set(x.key,[rootX+sign*x.d*250,80+x.y*(p.leaf>1?(H-180)/(p.leaf-1):0)]);let sh='<g id="depGraph"><defs><marker id="depArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"/></marker></defs>';for(const x of p.items){if(!x.parent)continue;const A=pos.get(x.parent),B=pos.get(x.key),dir=state.depDirection==='importedBy'?'in':'out',sx=state.depDirection==='importedBy'?B[0]+105:A[0]+105,tx=state.depDirection==='importedBy'?A[0]-105:B[0]-105,m=(sx+tx)/2;sh+=`<path marker-end="url(#depArrow)" class="edge ${dir==='in'?'hot':''} ${x.type==='ref'||x.type==='cycle'?'reference':''}" d="M ${sx} ${state.depDirection==='importedBy'?B[1]:A[1]} C ${m} ${state.depDirection==='importedBy'?B[1]:A[1]},${m} ${state.depDirection==='importedBy'?A[1]:B[1]},${tx} ${state.depDirection==='importedBy'?A[1]:B[1]}"/>`}for(const x of p.items){const n=nodes[x.id],q=pos.get(x.key),w=x.type==='root'?220:210,left=q[0]-w/2,code=statusFor(x.id);sh+=`<g class="node ${state.selected===x.id?'selected':''}" data-id="${esc(x.id)}"><rect class="bg" x="${left}" y="${q[1]-25}" width="${w}" height="50" rx="11" ${x.type==='ref'||x.type==='cycle'?'stroke-dasharray="4 3"':''}/><text x="${left+16}" y="${q[1]-4}">${esc((n?.label||x.id).slice(0,24))}</text><text class="sub" x="${left+16}" y="${q[1]+12}">${esc((x.type==='cycle'?'⟳ cycle · ':x.type==='ref'?'↩ already shown · ':'')+(n?.repoPath||'').slice(0,30))}</text>${badgeSvg(code,left+w-25,q[1]-20)}</g>`}sh+='</g>';$('#depShell').innerHTML=`<div class="dep-command"><button class="root-pill" id="rootPill"><span>Root</span><b>${esc(f.repoPath)}</b><span>⌄</span></button><div class="direction"><button data-dir="importedBy" class="${state.depDirection==='importedBy'?'active':''}">← Imported by</button><button data-dir="imports" class="${state.depDirection==='imports'?'active':''}">Imports →</button></div><button class="mini" id="depthBtn">Depth ${state.depDepth} · bounded</button><div class="spacer"></div></div><div class="dep-insight"><div><strong>${state.depDirection==='importedBy'?'Impact tree':'Requirement tree'}</strong><br><span>Canonical repository-local imports projected from one explicit root.</span></div><div class="dep-stats"><span><b>${p.unique}</b>reachable</span><span><b>${p.refs}</b>repeated routes</span><span><b>${importedBy(f.id).length} / ${imports(f.id).length}</b>in / out direct</span></div></div><div class="dep-tree"><svg class="dep-svg" id="depSvg" viewBox="0 0 ${W} ${H}">${sh}</svg><div class="dep-bound">1 root · depth ≤ ${state.depDepth}${p.truncated?` · ${p.truncated} deeper hidden`:''}${p.cycles?` · ${p.cycles} cycle`:''}</div></div><div class="root-menu" id="rootMenu" hidden><input id="rootSearch" placeholder="Choose root file…"><div class="root-list" id="rootList"></div></div>`;$('#rootPill').onclick=e=>{e.stopPropagation();$('#rootMenu').hidden=!$('#rootMenu').hidden;renderRootMenu('')};$('#rootSearch').oninput=e=>renderRootMenu(e.target.value);$$('[data-dir]').forEach(b=>b.onclick=()=>{state.depDirection=b.dataset.dir;resetCamera();renderDependencies()});$('#depthBtn').onclick=()=>{state.depDepth=state.depDepth>=4?2:state.depDepth+1;resetCamera();renderDependencies()};bindNodes($('#depSvg'));applyCamera()}
 function renderRootMenu(q){const list=$('#rootList');if(!list)return;const k=q.toLowerCase(),opts=files().filter(f=>!k||f.repoPath.toLowerCase().includes(k)).sort((a,b)=>a.repoPath.localeCompare(b.repoPath));list.innerHTML=opts.map(f=>`<button class="root-option ${f.id===state.depRoot?'current':''}" data-id="${esc(f.id)}"><span>${icons.file}</span><span class="main"><b>${esc(f.label)}</b><small>${esc(f.repoPath)}</small></span><small>${importedBy(f.id).length} in · ${imports(f.id).length} out</small></button>`).join('');list.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{state.depRoot=b.dataset.id;state.selected=b.dataset.id;$('#rootMenu').hidden=true;resetCamera();renderDependencies();renderDrawer();updateSelection()})}
