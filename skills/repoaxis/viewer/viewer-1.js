@@ -67,7 +67,8 @@ function treeLayout(projection){
 function structureCard(n,x,y,projection){
   if(projection.mode==='overview'){
     const code=statusFor(n.id),desc=structureDescendants(n.id).length,base=n.type==='root'?10:n.type==='folder'?7:n.type==='file'?5:4,r=Math.min(13,base+Math.log2(desc+1)*.8);
-    return`<g class="node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}"><title>${esc(n.label)} · ${desc} descendant${desc===1?'':'s'}</title><circle cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${code?colorFor(code)[0]:'#fff'}" stroke="${state.selected===n.id?'#625bff':(n.type==='root'||n.type==='folder'?'#817aff':'#cdd3df')}" stroke-width="${state.selected===n.id?2:1.25}"/><circle cx="${x}" cy="${y}" r="${Math.max(22,r+10)}" fill="transparent"/></g>`
+    const label=n.label.length>18?n.label.slice(0,17)+'…':n.label;
+    return`<g class="node macro-node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}" role="button" tabindex="0" aria-label="Inspect ${esc(n.label)}; ${desc} descendant${desc===1?'':'s'}"><title>${esc(n.label)} · ${desc} descendant${desc===1?'':'s'} · select to inspect · double-click to explore</title><rect class="macro-target" x="${x-22}" y="${y-17}" width="184" height="34" rx="13" fill="transparent"/><circle class="macro-dot" cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${code?colorFor(code)[0]:'#fff'}" stroke="${state.selected===n.id?'#625bff':(n.type==='root'||n.type==='folder'?'#817aff':'#cdd3df')}" stroke-width="${state.selected===n.id?2:1.25}"/><circle class="macro-hit" cx="${x}" cy="${y}" r="${Math.max(22,r+10)}"/><text class="macro-label" x="${x+24}" y="${y+4}">${esc(label)}${desc?`<tspan class="macro-count" dx="6">${desc}</tspan>`:''}</text></g>`
   }
   const code=statusFor(n.id),hidden=projection.hiddenByNode?.get(n.id)||0,w=n.type==='function'||n.type==='class'?202:190,h=42,left=x-w/2,iconTxt=n.type==='folder'||n.type==='root'?'▱':n.type==='file'?'◇':n.type==='class'?'C':'ƒ';
   return`<g class="node ${state.selected===n.id?'selected':''}" data-id="${esc(n.id)}"><rect class="bg" x="${left}" y="${y-h/2}" width="${w}" height="${h}" rx="10"/><text x="${left+14}" y="${y+4}" fill="#625bff">${iconTxt}</text><text x="${left+34}" y="${y+4}">${esc(n.label.length>24?n.label.slice(0,23)+'…':n.label)}</text>${hidden?`<text class="sub" x="${left+w-42}" y="${y+4}">+${hidden}</text>`:''}${badgeSvg(code,left+w-24,y-8)}</g>`
@@ -78,6 +79,12 @@ function enterStructureFocus(id=state.selected||ROOT){
 }
 function leaveStructureFocus(){
   state.structureFocus=false;state.structureRoot=ROOT;resetCamera();renderStructure()
+}
+function structureOverviewInspectState(id){
+  if(!nodes[id])return false;state.selected=id;state.drawer=true;return true
+}
+function inspectStructureOverview(id){
+  if(!structureOverviewInspectState(id))return;$('#content').classList.add('drawer-open');renderStructure();renderDrawer();updateSelection()
 }
 function renderStructure(){
   const projection=structureProjection(),L=treeLayout(projection),svg=$('#structureSvg');
@@ -91,11 +98,12 @@ function renderStructure(){
   for(const id of projection.visible){const n=nodes[id];if(n&&L.pos[id])h+=structureCard(n,...L.pos[id],projection)}
   h+='</g>';svg.innerHTML=h;
   const root=nodes[projection.root];
-  $('#structureMode').textContent=projection.mode==='focus'?`${root?.repoPath==='.'||root?.id===ROOT?'Repository':root?.repoPath||root?.label} · ${projection.visible.size}/${projection.total} nodes`:`Repository topology · ${projection.visible.size} macro nodes`;
+  $('#structureMode').textContent=projection.mode==='focus'?`${root?.repoPath==='.'||root?.id===ROOT?'Repository':root?.repoPath||root?.label} · ${projection.visible.size}/${projection.total} nodes`:`Repository topology · ${projection.visible.size} macro nodes · select to inspect`;
   $('#wholeBtn').hidden=projection.mode!=='focus';$('#labelsBtn').hidden=projection.mode==='focus';
+  if(projection.mode==='overview'){const selected=nodes[state.selected];$('#labelsBtn').textContent=state.selected===ROOT?'Explore repository':'Explore selected';$('#labelsBtn').title=`Open ${selected?.repoPath||selected?.label||'selected node'} as focused structure`}
   renderBreadcrumbs();
   if(projection.mode==='overview'){
-    svg.querySelectorAll('.node[data-id]').forEach(el=>el.onclick=()=>enterStructureFocus(el.dataset.id))
+    svg.querySelectorAll('.node[data-id]').forEach(el=>{el.onclick=()=>inspectStructureOverview(el.dataset.id);el.ondblclick=()=>enterStructureFocus(el.dataset.id);el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspectStructureOverview(el.dataset.id)}}})
   }else bindNodes(svg);
   applyCamera();applyFilter()
 }
