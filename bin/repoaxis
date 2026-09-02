@@ -1,9 +1,5 @@
 #!/usr/bin/env node
 (async () => {
-  if (process.argv[2] === "snapshot") {
-    await import("../skills/repoaxis/scripts/snapshot-cli.mjs");
-    return;
-  }
   await import("../skills/repoaxis/scripts/cli.mjs");
 })().catch((error) => {
   console.error(`repoaxis: ${error.message}`);
