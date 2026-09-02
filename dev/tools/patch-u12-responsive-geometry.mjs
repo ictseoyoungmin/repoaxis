@@ -54,6 +54,14 @@ const observer="window.addEventListener('hashchange',()=>{const v=location.hash.
 v4=replaceOrFail(v4,bootAnchor,observer,'spatial ResizeObserver');
 fs.writeFileSync(v4Path,v4);
 
+const graphSpacingPath='dev/tests/integration/viewer-graph-spacing.test.mjs';
+let graphSpacing=fs.readFileSync(graphSpacingPath,'utf8');
+graphSpacing=replaceOrFail(graphSpacing,
+"function ctx(){const state={camera:{graph:{s:1,x:0,y:0}},graphCameraAnchor:null};const c=vm.createContext({state});vm.runInContext(helpers,c);return c}",
+"function ctx(){const state={camera:{graph:{s:1,x:0,y:0}},graphCameraAnchor:null};const c=vm.createContext({state,spatialViewportSize:()=>({w:1800,h:1040})});vm.runInContext(helpers,c);return c}",
+'graph spacing viewport stub');
+fs.writeFileSync(graphSpacingPath,graphSpacing);
+
 const testPath='dev/tests/integration/viewer-responsive-geometry.test.mjs';
 fs.writeFileSync(testPath,`import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -82,23 +90,23 @@ test('spatial viewport reconciliation preserves the same world center as usable 
 });
 
 test('Structure and Dependencies use the live host viewport instead of content-sized SVG viewBoxes',()=>{
-  assert.match(s1,/reconcileSpatialViewport\('structure',spatialViewportSize\(\)\)/);
-  assert.match(s1,/viewBox',\`0 0 \$\{vp\.w\} \$\{vp\.h\}\`/);
-  assert.match(s1,/reconcileSpatialViewport\('dependencies',spatialViewportSize\(\)\)/);
-  assert.match(s1,/id="depSvg" viewBox="0 0 \$\{vp\.w\} \$\{vp\.h\}"/);
+  assert.ok(s1.includes("reconcileSpatialViewport('structure',spatialViewportSize())"));
+  assert.ok(s1.includes("svg.setAttribute('viewBox',`0 0 ${vp.w} ${vp.h}`)"));
+  assert.ok(s1.includes("reconcileSpatialViewport('dependencies',spatialViewportSize())"));
+  assert.ok(s1.includes('id="depSvg" viewBox="0 0 ${vp.w} ${vp.h}"'));
 });
 
 test('Graph keeps its spacing-first world but exposes the current host as the camera viewport',()=>{
-  assert.match(s3,/const vp=spatialViewportSize\(\)/);
-  assert.match(s3,/viewW:vp\.w,viewH:vp\.h/);
-  assert.match(s3,/reconcileSpatialViewport\('graph',\{w:L\.viewW,h:L\.viewH\}\)/);
-  assert.match(s3,/GRAPH_VIEWPORT\.w,maxX\+40,vp\.w/);
+  assert.ok(s3.includes('const vp=spatialViewportSize()'));
+  assert.ok(s3.includes('viewW:vp.w,viewH:vp.h'));
+  assert.ok(s3.includes("reconcileSpatialViewport('graph',{w:L.viewW,h:L.viewH})"));
+  assert.ok(s3.includes('GRAPH_VIEWPORT.w,maxX+40,vp.w'));
 });
 
 test('active spatial views rerender through a ResizeObserver when drawer or browser geometry changes',()=>{
-  assert.match(s4,/ResizeObserver/);
-  assert.match(s4,/scheduleSpatialReconcile/);
-  assert.match(s4,/state\.view==='changes'/);
-  assert.match(s4,/renderCurrent\(\)/);
+  assert.ok(s4.includes('ResizeObserver'));
+  assert.ok(s4.includes('scheduleSpatialReconcile'));
+  assert.ok(s4.includes("state.view==='changes'"));
+  assert.ok(s4.includes('renderCurrent()'));
 });
 `);
