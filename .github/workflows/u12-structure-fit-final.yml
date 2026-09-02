@@ -1,0 +1,26 @@
+name: u12-structure-fit-final
+on:
+  push:
+    branches: [feat/u12-responsive-geometry-reconciliation]
+    paths: [.github/workflows/u12-structure-fit-final.yml]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: node dev/tools/patch-u12-structure-fit-final.mjs
+      - run: npm ci
+      - run: npm run check
+      - name: Commit final U12 Structure fit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "4189824+github-actions[bot]@users.noreply.github.com"
+          git add skills/repoaxis/viewer/viewer-1.js dev/tests/integration/viewer-responsive-geometry.test.mjs
+          git commit -m "U12: fit Whole Structure before preserving live scale"
+          git push origin HEAD:feat/u12-responsive-geometry-reconciliation
