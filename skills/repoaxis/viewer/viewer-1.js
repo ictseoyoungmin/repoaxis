@@ -64,6 +64,15 @@ function treeLayout(projection){
   for(const id of Object.keys(pos))pos[id]=[100+pos[id][0]*gap,80+pos[id][1]*row];
   return{W,H,pos}
 }
+function structurePrepareCamera(projection,L,vp){
+  const key=`${projection.mode}:${projection.root}:${projection.total}`;
+  if(state.structureCameraAnchor===key)return;
+  state.structureCameraAnchor=key;
+  if(projection.mode!=='overview')return;
+  const pts=Object.values(L.pos);if(!pts.length)return;
+  const minX=Math.min(...pts.map(p=>p[0]))-42,maxX=Math.max(...pts.map(p=>p[0]))+190,minY=Math.min(...pts.map(p=>p[1]))-36,maxY=Math.max(...pts.map(p=>p[1]))+36,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),fit=Math.min((vp.w-48)/contentW,(vp.h-48)/contentH),scale=Math.max(.72,Math.min(1,fit)),cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+  state.camera.structure={s:scale,x:vp.w/2-cx*scale,y:vp.h/2-cy*scale}
+}
 function structureGitMarkup(summary,x,y){
   if(!summary)return'';
   if(summary.history)return`<text class="macro-git-line" x="${x+24}" y="${y+16}"><tspan class="git-history">HEAD ${summary.changed}</tspan></text>`;
@@ -81,10 +90,10 @@ function structureCard(n,x,y,projection){
 }
 function enterStructureFocus(id=state.selected||ROOT){
   const root=structureFocusTarget(id);
-  state.structureFocus=true;state.structureRoot=root;state.selected=id&&nodes[id]?id:root;resetCamera();renderStructure();renderDrawer();updateSelection()
+  state.structureFocus=true;state.structureRoot=root;state.selected=id&&nodes[id]?id:root;state.structureCameraAnchor=null;resetCamera();renderStructure();renderDrawer();updateSelection()
 }
 function leaveStructureFocus(){
-  state.structureFocus=false;state.structureRoot=ROOT;resetCamera();renderStructure()
+  state.structureFocus=false;state.structureRoot=ROOT;state.structureCameraAnchor=null;resetCamera();renderStructure()
 }
 function structureOverviewInspectState(id){
   if(!nodes[id])return false;state.selected=id;state.drawer=true;return true
@@ -94,7 +103,7 @@ function inspectStructureOverview(id){
 }
 function renderStructure(){
   const projection=structureProjection(),L=treeLayout(projection),svg=$('#structureSvg'),vp=reconcileSpatialViewport('structure',spatialViewportSize());
-  svg.setAttribute('viewBox',`0 0 ${vp.w} ${vp.h}`);
+  svg.setAttribute('viewBox',`0 0 ${vp.w} ${vp.h}`);structurePrepareCamera(projection,L,vp);
   let h='<g id="structureGraph">';
   for(const n of Object.values(nodes)){
     if(!projection.visible.has(n.id)||!n.parent||!projection.visible.has(n.parent)||!L.pos[n.id]||!L.pos[n.parent])continue;
