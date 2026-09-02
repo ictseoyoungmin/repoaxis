@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+
+const path='skills/repoaxis/viewer/viewer-3.js';
+let src=fs.readFileSync(path,'utf8');
+let a=src.indexOf('function graphBestRouteForSides');
+let b=src.indexOf('function graphRoutedEdge',a);
+if(a<0||b<0)throw new Error('graphBestRouteForSides anchors missing');
+const best=`function graphBestRouteForSides(a,b,L,ss,ts,so,to,pairPenalty=0){const A=L.pos[a],B=L.pos[b],sp=graphSidePort(A,ss,so),tp=graphSidePort(B,ts,to),obs=graphRouteObstacles(L,a,b),direct=Math.max(1,Math.abs(A[0]-B[0])+Math.abs(A[1]-B[1]));let bestSimple=null,bestDetour=null;for(const raw of graphRouteCandidates(sp,tp,obs,L)){const pts=graphSimplifyRoute(raw);if(!graphPortDirectionOk(pts,sp,tp)||!graphRouteClear(pts,obs))continue;const stats=graphRouteStats(pts),usage=graphRouteUsePenalty(pts),detour=stats.turns>3;let score=pairPenalty+stats.length+stats.turns*(detour?118:64)+usage*.08;if(stats.length>direct*1.45+80)score+=(stats.length-(direct*1.45+80))*(detour?4.5:2.2);const candidate={score,pts,sp,tp,stats,usage};if(detour){if(!bestDetour||score<bestDetour.score)bestDetour=candidate}else if(!bestSimple||score<bestSimple.score)bestSimple=candidate}return bestSimple||bestDetour}\n`;
+src=src.slice(0,a)+best+src.slice(b);
+a=src.indexOf('function graphRoutedEdge');
+b=src.indexOf('function graphExploreContext',a);
+if(a<0||b<0)throw new Error('graphRoutedEdge anchors missing');
+const routed=`function graphRoutedEdge(a,b,L,plan){const A=L.pos[a],B=L.pos[b];if(!A||!B)return null;const pref=plan.get(a+'>'+b)||(()=>{const[ss,ts]=graphPreferredSides(A,B);return{ss,ts,so:0,to:0,sc:1,tc:1}})(),altS=graphAlternateSide(pref.ss,A,B),altT=graphAlternateSide(pref.ts,B,A),saturated=pref.sc>=6||pref.tc>=6,pairs=[[pref.ss,pref.ts,pref.so,pref.to,0],[pref.ss,altT,pref.so,0,saturated?120:260],[altS,pref.ts,0,pref.to,saturated?120:260],[altS,altT,0,0,saturated?260:520]];let simpleBest=null,detourBest=null;for(const pair of pairs){const r=graphBestRouteForSides(a,b,L,...pair);if(!r)continue;if(r.stats.turns<=3){if(!simpleBest||r.score<simpleBest.score)simpleBest=r}else if(!detourBest||r.score<detourBest.score)detourBest=r}const best=simpleBest||detourBest,sa=graphScopeKey(nodes[a]),ta=graphScopeKey(nodes[b]),same=sa===ta;if(!best){const sp=graphSidePort(A,pref.ss,pref.so),tp=graphSidePort(B,pref.ts,pref.to),x=(sp.gate[0]+tp.gate[0])/2,pts=graphSimplifyRoute([sp.base,sp.gate,[x,sp.gate[1]],[x,tp.gate[1]],tp.gate,tp.base]);return{path:graphRoundedRoute(pts,10),points:pts,kind:same?'local':'cross-folder',sourceSide:pref.ss,targetSide:pref.ts,strategy:'fallback',blocked:true,turns:graphRouteStats(pts).turns}}const pts=graphSimplifyRoute([best.sp.base,...best.pts,best.tp.base]);for(let i=1;i<best.pts.length;i++)graphRoutingState.used.push([best.pts[i-1],best.pts[i]]);return{path:graphRoundedRoute(pts,10),points:pts,kind:same?'local':'cross-folder',sourceSide:best.sp.side,targetSide:best.tp.side,strategy:best.stats.turns>3?'detour':'orthogonal',blocked:false,turns:best.stats.turns}}\n`;
+src=src.slice(0,a)+routed+src.slice(b);
+fs.writeFileSync(path,src);
