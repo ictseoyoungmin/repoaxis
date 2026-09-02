@@ -8,7 +8,9 @@ const V0=fileURLToPath(new URL('../../../skills/repoaxis/viewer/viewer-0.js',imp
 const V1=fileURLToPath(new URL('../../../skills/repoaxis/viewer/viewer-1.js',import.meta.url));
 const V3=fileURLToPath(new URL('../../../skills/repoaxis/viewer/viewer-3.js',import.meta.url));
 const V4=fileURLToPath(new URL('../../../skills/repoaxis/viewer/viewer-4.js',import.meta.url));
-const s0=fs.readFileSync(V0,'utf8'),s1=fs.readFileSync(V1,'utf8'),s3=fs.readFileSync(V3,'utf8'),s4=fs.readFileSync(V4,'utf8');
+const BASE=fileURLToPath(new URL('../../../skills/repoaxis/viewer/viewer-base.css',import.meta.url));
+const SURFACES=fileURLToPath(new URL('../../../skills/repoaxis/viewer/viewer-surfaces.css',import.meta.url));
+const s0=fs.readFileSync(V0,'utf8'),s1=fs.readFileSync(V1,'utf8'),s3=fs.readFileSync(V3,'utf8'),s4=fs.readFileSync(V4,'utf8'),baseCss=fs.readFileSync(BASE,'utf8'),surfacesCss=fs.readFileSync(SURFACES,'utf8');
 
 test('spatial viewport reconciliation preserves the same world center as usable width changes',()=>{
   const start=s0.indexOf('function spatialViewportSize');
@@ -37,6 +39,12 @@ test('Graph keeps its spacing-first world but exposes the current host as the ca
   assert.ok(s3.includes('viewW:vp.w,viewH:vp.h'));
   assert.ok(s3.includes("reconcileSpatialViewport('graph',{w:L.viewW,h:L.viewH})"));
   assert.ok(s3.includes('GRAPH_VIEWPORT.w,maxX+40,vp.w'));
+});
+
+test('viewer shell can shrink below desktop-wide topbar min-content width',()=>{
+  assert.ok(baseCss.includes('.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:72px 1fr}'));
+  assert.ok(surfacesCss.includes('@media(max-width:1360px){.selection-context{display:none}'));
+  assert.ok(surfacesCss.includes('.search-trigger{width:260px}'));
 });
 
 test('active spatial views rerender through a ResizeObserver when drawer or browser geometry changes',()=>{
