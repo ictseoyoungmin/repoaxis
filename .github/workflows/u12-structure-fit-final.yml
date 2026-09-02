@@ -1,4 +1,4 @@
-name: u12-structure-fit-final
+name: u12-structure-fit-final2
 on:
   push:
     branches: [feat/u12-responsive-geometry-reconciliation]
