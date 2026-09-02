@@ -14,7 +14,7 @@ test("Overview prioritizes current state and indexed facts before provenance and
 });
 
 test("redundant identity details move out of Overview but remain available in Metrics", () => {
-  assert.match(source, /const identity=`<div class="section"><div class="section-title">Canonical identity<\/div>/);
+  assert.match(source, /identity=`<div class="section"><div class="section-title">Canonical identity<\/div>/);
   assert.match(source, /if\(state\.tab==='metrics'\)body=identity\+facts/);
   assert.doesNotMatch(source, /if\(state\.tab==='overview'\)body=identity/);
 });
