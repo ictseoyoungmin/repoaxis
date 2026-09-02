@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: node dev/tools/patch-u12-responsive-geometry.mjs
+      - run: node dev/tools/patch-u12-responsive-geometry-v2.mjs
       - run: npm ci
       - run: npm run check
       - name: Commit U12 responsive geometry
