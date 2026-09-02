@@ -1,4 +1,4 @@
-name: u10-structure-hit-fix
+name: u10-structure-target-fix
 on:
   push:
     branches: [feat/u10-structure-direct-manipulation]
@@ -14,26 +14,34 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - name: Make Structure containment edges non-interactive
+      - name: Make the visible macro unit the clickable macro unit
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const path='skills/repoaxis/viewer/viewer-base.css';
-          let css=fs.readFileSync(path,'utf8');
-          const anchor='.edge{fill:none;stroke:#cbd1dc;stroke-width:1.2;vector-effect:non-scaling-stroke}';
-          const rule='.structure-svg .edge{pointer-events:none}';
-          if(!css.includes(rule)){
-            if(!css.includes(anchor))throw new Error('Missing edge CSS anchor');
-            css=css.replace(anchor,anchor+rule);
-            fs.writeFileSync(path,css);
+          const viewerPath='skills/repoaxis/viewer/viewer-1.js';
+          let viewer=fs.readFileSync(viewerPath,'utf8');
+          const before=`<circle class="macro-dot" cx="\${x}" cy="\${y}"`;
+          const after=`<rect class="macro-target" x="\${x-22}" y="\${y-17}" width="184" height="34" rx="13" fill="transparent"/><circle class="macro-dot" cx="\${x}" cy="\${y}"`;
+          if(!viewer.includes('class="macro-target"')){
+            if(!viewer.includes(before))throw new Error('Missing macro dot patch anchor');
+            viewer=viewer.replace(before,after);
+            fs.writeFileSync(viewerPath,viewer);
+          }
+          const testPath='dev/tests/integration/viewer-structure-interaction.test.mjs';
+          let test=fs.readFileSync(testPath,'utf8');
+          if(!test.includes("assert.match(html,/class=\"macro-target\"/)")){
+            const anchor='  assert.match(html,/class="macro-label"/);';
+            if(!test.includes(anchor))throw new Error('Missing interaction test anchor');
+            test=test.replace(anchor,anchor+'\n  assert.match(html,/class="macro-target"/);');
+            fs.writeFileSync(testPath,test);
           }
           NODE
       - run: npm ci
       - run: npm run check
-      - name: Commit U10 Structure hit-test correction
+      - name: Commit U10 Structure acquisition correction
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add skills/repoaxis/viewer/viewer-base.css
-          git commit -m "U10: keep Structure edges out of hit testing"
+          git add skills/repoaxis/viewer/viewer-1.js dev/tests/integration/viewer-structure-interaction.test.mjs
+          git commit -m "U10: align Structure macro visuals and hit targets"
           git push origin HEAD:feat/u10-structure-direct-manipulation
