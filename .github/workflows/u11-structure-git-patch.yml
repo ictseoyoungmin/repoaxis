@@ -15,12 +15,13 @@ jobs:
           node-version: 24
           cache: npm
       - run: node dev/tools/patch-u11-structure-git.mjs
+      - run: node dev/tools/patch-u11-tests.mjs
       - run: npm ci
       - run: npm run check
       - name: Commit U11 Structure Git aggregation
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add skills/repoaxis/viewer/viewer-0.js skills/repoaxis/viewer/viewer-1.js skills/repoaxis/viewer/viewer-4.js skills/repoaxis/viewer/viewer-base.css dev/tests/integration/viewer-structure-git-aggregation.test.mjs
+          git add skills/repoaxis/viewer/viewer-0.js skills/repoaxis/viewer/viewer-1.js skills/repoaxis/viewer/viewer-4.js skills/repoaxis/viewer/viewer-base.css dev/tests/integration/viewer-structure-git-aggregation.test.mjs dev/tests/integration/viewer-structure-interaction.test.mjs
           git commit -m "U11: aggregate Git state for Structure scopes"
           git push origin HEAD:feat/u11-structure-git-aggregation
