@@ -95,6 +95,8 @@ jobs:
           grep -q 'src/core/a-root.js' "$OUT/changes.html"
           grep -q 'config/default.json' "$OUT/changes.html"
           grep -q 'Deleted paths' "$OUT/changes.html"
+          grep -q 'Root</span><b>src/core/a-root.js' "$OUT/dependencies.html"
+          grep -Eq 'class="node[^\"]*selected[^\"]*" data-id="file:src/core/a-root.js"' "$OUT/graph.html"
           curl -sf http://127.0.0.1:4173/api/meta > "$OUT/meta.json"
           curl -sf http://127.0.0.1:4173/api/history > "$OUT/history.json"
       - uses: actions/upload-artifact@v4
