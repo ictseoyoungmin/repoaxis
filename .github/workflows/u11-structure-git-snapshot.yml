@@ -1,4 +1,4 @@
-name: u11-structure-git-snapshot
+name: u11-structure-git-snapshot-final
 on:
   push:
     branches: [feat/u11-structure-git-aggregation]
@@ -41,7 +41,7 @@ jobs:
       - run: node dev/tools/capture-u11-structure-git.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: u11-structure-git-aggregation
+          name: u11-structure-git-aggregation-final
           path: |
             u11-structure-git-overview.png
             u11-structure-git-inspector.png
