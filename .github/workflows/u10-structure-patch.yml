@@ -1,0 +1,26 @@
+name: u10-structure-patch
+on:
+  push:
+    branches: [feat/u10-structure-direct-manipulation]
+    paths: [.github/workflows/u10-structure-patch.yml]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: node dev/tools/patch-u10-structure.mjs
+      - run: npm ci
+      - run: npm run check
+      - name: Commit U10 Structure direct manipulation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add skills/repoaxis/viewer/viewer-1.js skills/repoaxis/viewer/viewer-base.css dev/tests/integration/viewer-structure-interaction.test.mjs
+          git commit -m "U10: make Structure overview directly inspectable"
+          git push origin HEAD:feat/u10-structure-direct-manipulation
