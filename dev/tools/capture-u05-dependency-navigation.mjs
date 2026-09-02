@@ -15,7 +15,14 @@ if (await candidates.count() === 0) {
 }
 if (await candidates.count() === 0) throw new Error('No dependency child available for navigation capture');
 
-await candidates.first().click();
+const candidateIndex = await candidates.evaluateAll(els => {
+  const dir = document.querySelector('[data-dir].active')?.dataset.dir;
+  const rel = dir === 'imports' ? (typeof imports === 'function' ? imports : null) : (typeof importedBy === 'function' ? importedBy : null);
+  if (!rel) return 0;
+  const index = els.findIndex(el => rel(el.dataset.id).length > 0);
+  return index >= 0 ? index : 0;
+});
+await candidates.nth(candidateIndex).click();
 await page.locator('#depUseRoot').waitFor();
 const rootAfterInspect = (await page.locator('#rootPill b').textContent())?.trim() || '';
 if (rootAfterInspect !== rootBefore) throw new Error(`Inspecting child changed root: ${rootBefore} -> ${rootAfterInspect}`);
@@ -27,6 +34,7 @@ const rootAfterPromote = (await page.locator('#rootPill b').textContent())?.trim
 if (!rootAfterPromote || rootAfterPromote === rootBefore) throw new Error('Use selected as root did not change dependency root');
 if (await page.locator('.dep-trail-node').count() < 2) throw new Error('Root trail did not preserve previous root');
 if (await page.locator('#depBack').isDisabled()) throw new Error('Back should be enabled after root promotion');
+if (await page.locator('#depSvg .node[data-id]').count() <= 1) throw new Error('Promoted root did not retain a visible dependency context');
 await page.screenshot({ path: 'u05-dependency-reroot.png', fullPage: false });
 
 await page.locator('#depBack').click();
