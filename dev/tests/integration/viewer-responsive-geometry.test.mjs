@@ -53,3 +53,11 @@ test('Whole Structure chooses a readable initial overview scale once, then viewp
   assert.ok(s1.includes('state.structureCameraAnchor===key'));
   assert.ok(s1.includes('structurePrepareCamera(projection,L,vp)'));
 });
+
+
+test('Dependencies center the explicit root at readable scale once, then preserve it across viewport reconciliation',()=>{
+  assert.ok(s1.includes('function dependencyPrepareCamera'));
+  assert.ok(s1.includes("state.camera.dependencies={s:1,x:vp.w/2-root[0],y:vp.h/2-root[1]}"));
+  assert.ok(s1.includes("dependencyPrepareCamera(f.id,pos,depVp)"));
+  assert.ok(s1.includes("state.dependencyCameraAnchor===key"));
+});
