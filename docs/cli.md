@@ -4,7 +4,7 @@
 
 Operational query and annotation commands use the default `<git-root>/.repoaxis.json` as a live derived index. Before reading it, Repoaxis checks a fingerprint built from the installed tool version, Git HEAD/ref, dirty/untracked file content, staged index state, and Git working-tree status. If the index is missing or stale, Repoaxis rebuilds it before answering.
 
-Use `--index FILE` to select an explicit snapshot. An explicit index is validated but is not automatically refreshed; this keeps fixtures, exported snapshots, and historical comparisons reproducible.
+Use `--index FILE` to select an explicit index snapshot. An explicit index is validated but is not automatically refreshed; this keeps fixtures, exported indexes, and historical comparisons reproducible.
 
 `validate` and `summary` are diagnostic commands and never rebuild their input.
 
@@ -34,6 +34,18 @@ Options:
 - `--no-open` — start the server without launching a browser.
 
 The viewer is read-only. Annotation changes remain explicit `note` CLI operations. See `docs/viewer.md` for the server and graph boundaries.
+
+### `repoaxis snapshot [--root PATH] [--output FILE]`
+Exports the same canonical human viewer as one self-contained frozen HTML file.
+
+The command resolves the selected Git repository, starts the normal read-only viewer on an ephemeral loopback port, obtains its exact packaged HTML/CSS/JavaScript plus `/api/index`, `/api/meta`, and `/api/history` responses, then closes the server and writes one HTML artifact. It does not maintain a second snapshot renderer or repository model.
+
+Options:
+
+- `--root PATH` — resolve another Git repository before capture.
+- `--output FILE` — choose the HTML output path. Default: `<git-root>/repoaxis-snapshot.html`.
+
+A viewer snapshot is frozen at capture time. Opening it later does not require Repoaxis or a local server and does not fetch repository data or viewer assets over the network. Captured Git remote links can still navigate to the repository host when the user explicitly follows them. See `docs/viewer.md` for the frozen/live boundary.
 
 ### `repoaxis validate [FILE]`
 Validates the Repoaxis v1 outer contract and graph invariants supported by the installed version.
@@ -86,7 +98,7 @@ Reads, writes, or clears one durable `agent_note`.
 
 For the default repository index, Repoaxis writes authored notes to Git metadata at `repoaxis/annotations.json` (resolved with `git rev-parse --git-path`) and projects the same notes into `.repoaxis.json`. This keeps generated structure disposable: deleting `.repoaxis.json` and rebuilding does not delete repository notes. The durable annotation file lives under Git metadata, not the working tree.
 
-Explicit non-default snapshot files keep their own annotation state and do not become the repository's durable note store.
+Explicit non-default index snapshots keep their own annotation state and do not become the repository's durable note store.
 
 ### `repoaxis notes [--index FILE]`
 Lists all stored annotations in deterministic node-ID order. Each entry includes `orphaned: true` when its node no longer exists in the current generated graph.
@@ -102,7 +114,7 @@ The generated index stores `generated.refresh.fingerprint`. Default operational 
 
 Repoaxis hashes content only for paths Git already reports as changed or untracked, and hashes staged index records for staged/conflicted paths. Clean tracked files are represented by Git HEAD plus status, avoiding a full-repository content hash on every query. The generated index path itself is excluded so rebuilding or editing annotations does not cause self-triggered refresh loops.
 
-There is no always-on background daemon in this behavior. `repoaxis view` is a foreground localhost process; when it exits, no viewer process remains.
+There is no always-on background daemon in this behavior. `repoaxis view` is a foreground localhost process; when it exits, no viewer process remains. `repoaxis snapshot` uses an ephemeral instance of that same viewer only during capture and closes it before returning.
 
 ## Target resolution
 
@@ -112,6 +124,7 @@ Examples:
 
 ```bash
 repoaxis view
+repoaxis snapshot --output repoaxis-snapshot.html
 repoaxis find parseConfig
 repoaxis context src/config.js:parseConfig
 repoaxis why src/config.js:parseConfig
