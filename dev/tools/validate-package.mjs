@@ -12,6 +12,7 @@ const required = [
   "skills/repoaxis/SKILL.md",
   "skills/repoaxis/schemas/repoaxis.schema.json",
   "skills/repoaxis/lib/view-server.mjs",
+  "skills/repoaxis/lib/view-snapshot.mjs",
   "skills/repoaxis/viewer/repoaxis.html",
   "skills/repoaxis/lib/vendor/acorn-8.15.0.mjs",
   "skills/repoaxis/lib/vendor/ACORN-LICENSE.txt",
