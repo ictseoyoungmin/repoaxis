@@ -1,0 +1,36 @@
+name: u03-normalize-viewer
+
+on:
+  push:
+    branches:
+      - feat/u03-keyboard-navigation
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Restore compact viewer source layout
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = 'skills/repoaxis/viewer/viewer-4.js';
+          const source = fs.readFileSync(path, 'utf8');
+          const compact = source.replace(/\n\s*/g, '');
+          fs.writeFileSync(path, compact + '\n');
+          NODE
+      - name: Commit normalized source when needed
+        run: |
+          if git diff --quiet -- skills/repoaxis/viewer/viewer-4.js; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add skills/repoaxis/viewer/viewer-4.js
+          git commit -m "Normalize viewer source formatting"
+          git push origin HEAD:feat/u03-keyboard-navigation
