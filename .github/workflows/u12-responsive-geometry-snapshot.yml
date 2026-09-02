@@ -1,4 +1,4 @@
-name: u12-responsive-geometry-snapshot
+name: u12-responsive-geometry-snapshot-final
 on:
   push:
     branches: [feat/u12-responsive-geometry-reconciliation]
@@ -32,7 +32,7 @@ jobs:
       - run: node dev/tools/capture-u12-responsive-geometry.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: u12-responsive-geometry
+          name: u12-responsive-geometry-final
           path: |
             u12-structure-before.png
             u12-structure-drawer-open.png
