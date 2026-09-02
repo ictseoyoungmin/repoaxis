@@ -27,7 +27,10 @@ await page.screenshot({ path: "u03-keyboard-destination.png", fullPage: false })
 
 await page.keyboard.press("Escape");
 const drawerOpen = await page.locator("#content").evaluate(el=>el.classList.contains("drawer-open"));
-if (drawerOpen) throw new Error("Escape did not close the Inspector after search completion");
+if (drawerOpen) throw new Error("Escape did not begin closing the Inspector after search completion");
+await page.waitForTimeout(380);
+const drawerWidth = await page.locator("#drawer").evaluate(el=>el.getBoundingClientRect().width);
+if (drawerWidth > 2) throw new Error(`Inspector remained visually open after Escape: ${drawerWidth}px`);
 await page.screenshot({ path: "u03-keyboard-escape.png", fullPage: false });
 
 await browser.close();
