@@ -14,13 +14,13 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: node dev/tools/patch-u12-structure-camera.mjs
+      - run: node dev/tools/patch-u12-dependency-camera.mjs
       - run: npm ci
       - run: npm run check
-      - name: Commit U12 Structure camera correction
+      - name: Commit U12 dependency camera correction
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "4189824+github-actions[bot]@users.noreply.github.com"
           git add skills/repoaxis/viewer/viewer-0.js skills/repoaxis/viewer/viewer-1.js dev/tests/integration/viewer-responsive-geometry.test.mjs
-          git commit -m "U12: preserve readable Whole topology on live viewport"
+          git commit -m "U12: center dependency root in live canvas"
           git push origin HEAD:feat/u12-responsive-geometry-reconciliation
