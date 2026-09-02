@@ -1,0 +1,31 @@
+name: u05-dependency-patch
+
+on:
+  push:
+    branches:
+      - feat/u05-dependency-navigation
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: node dev/tools/patch-u05-dependency-navigation.mjs
+      - run: npm ci
+      - run: npm run check
+      - name: Commit U05 product changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add skills/repoaxis/viewer/viewer-0.js skills/repoaxis/viewer/viewer-1.js skills/repoaxis/viewer/viewer-3.js skills/repoaxis/viewer/viewer-surfaces.css dev/tests/integration/viewer-dependency-navigation.test.mjs
+          git commit -m "U05: restore dependency root navigation continuity"
+          git push origin HEAD:feat/u05-dependency-navigation
