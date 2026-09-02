@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: node dev/tools/patch-u09-dense-graph-routing.mjs
+      - run: node dev/tools/run-u09-dense-routing-patch.mjs
       - run: npm ci
       - run: npm run check
       - name: Commit U09 product changes
