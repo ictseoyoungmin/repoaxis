@@ -10,7 +10,7 @@ import { readHead, resolveGitRoot } from "./git.mjs";
 import { computeRepositoryFingerprint, createRefreshRecord } from "./refresh.mjs";
 import { stableStringify } from "./stable-json.mjs";
 
-export const REPOAXIS_VERSION = "0.12.2";
+export const REPOAXIS_VERSION = "0.13.0";
 
 function writeIndexAtomic(outputPath, index) {
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
