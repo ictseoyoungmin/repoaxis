@@ -1,0 +1,31 @@
+name: u06-graph-patch
+
+on:
+  push:
+    branches:
+      - feat/u06-graph-exploration-context
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: node dev/tools/patch-u06-graph.mjs
+      - run: npm ci
+      - run: npm run check
+      - name: Commit U06 product changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add skills/repoaxis/viewer/viewer-3.js skills/repoaxis/viewer/viewer-base.css skills/repoaxis/viewer/repoaxis.html dev/tests/integration/viewer-graph-exploration.test.mjs
+          git commit -m "U06: restore exploratory Graph context"
+          git push origin HEAD:feat/u06-graph-exploration-context
