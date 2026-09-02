@@ -1,0 +1,102 @@
+name: u01-visual-dogfood
+
+on:
+  push:
+    branches:
+      - feat/u01-viewer-shell-replacement
+    paths:
+      - .github/workflows/u01-visual-dogfood.yml
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Create representative external repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=/tmp/repoaxis-u01-visual
+          OUT="$GITHUB_WORKSPACE/u01-visual"
+          rm -rf "$ROOT" "$OUT"
+          mkdir -p "$ROOT/src/core" "$ROOT/src/features" "$ROOT/src/workers" "$ROOT/test" "$ROOT/config" "$OUT"
+          cd "$ROOT"
+          git init -q -b main
+          git config user.name 'Repoaxis Visual Dogfood'
+          git config user.email 'repoaxis@example.invalid'
+          git remote add origin git@github.com:example/visual-fixture.git
+          cat > src/core/a-root.js <<'JS'
+          export function parseConfig(value = 'dev') { return { mode: value }; }
+          export function validateConfig(config) { return Boolean(config.mode); }
+          JS
+          cat > src/core/service.js <<'JS'
+          import { parseConfig } from './a-root.js';
+          export function createService(){ return parseConfig('service'); }
+          JS
+          cat > src/features/api.js <<'JS'
+          import { createService } from '../core/service.js';
+          import { parseConfig } from '../core/a-root.js';
+          export function startApi(){ return [createService(), parseConfig('api')]; }
+          JS
+          cat > src/features/admin.js <<'JS'
+          import { createService } from '../core/service.js';
+          export function startAdmin(){ return createService(); }
+          JS
+          cat > src/workers/jobs.js <<'JS'
+          import { parseConfig } from '../core/a-root.js';
+          export function runJobs(){ return parseConfig('worker'); }
+          JS
+          cat > src/cli.js <<'JS'
+          import { startApi } from './features/api.js';
+          import { startAdmin } from './features/admin.js';
+          console.log(startApi(), startAdmin());
+          JS
+          cat > test/config.test.js <<'JS'
+          import { parseConfig } from '../src/core/a-root.js';
+          export const fixture = parseConfig('test');
+          JS
+          cat > config/default.json <<'JSON'
+          {"mode":"dev"}
+          JSON
+          cat > package.json <<'JSON'
+          {"name":"repoaxis-u01-visual-fixture","private":true,"type":"module"}
+          JSON
+          git add .
+          git commit -qm 'initial representative repository'
+          printf '\n// working-tree edit\n' >> src/core/a-root.js
+          printf '\n// staged edit\n' >> src/core/service.js
+          git add src/core/service.js
+          printf 'export const experimental = true;\n' > src/features/experimental.js
+          git rm -q config/default.json
+          "$GITHUB_WORKSPACE/bin/repoaxis" build >/dev/null
+          "$GITHUB_WORKSPACE/bin/repoaxis" view --no-open --port 4173 > "$OUT/viewer.log" 2>&1 &
+          echo $! > "$OUT/viewer.pid"
+      - name: Capture all four product surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$GITHUB_WORKSPACE/u01-visual"
+          for i in {1..40}; do curl -sf http://127.0.0.1:4173/api/health >/dev/null && break; sleep .25; done
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          for VIEW in structure dependencies changes graph; do
+            "$CHROME" --headless --no-sandbox --disable-gpu --hide-scrollbars --window-size=1600,1000 --virtual-time-budget=4000 --screenshot="$OUT/$VIEW.png" "http://127.0.0.1:4173/#$VIEW"
+            "$CHROME" --headless --no-sandbox --disable-gpu --virtual-time-budget=4000 --dump-dom "http://127.0.0.1:4173/#$VIEW" > "$OUT/$VIEW.html"
+          done
+          grep -q 'src/core/a-root.js' "$OUT/changes.html"
+          grep -q 'config/default.json' "$OUT/changes.html"
+          grep -q 'Deleted paths' "$OUT/changes.html"
+          curl -sf http://127.0.0.1:4173/api/meta > "$OUT/meta.json"
+          curl -sf http://127.0.0.1:4173/api/history > "$OUT/history.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repoaxis-u01-visual-dogfood
+          path: u01-visual/
+          if-no-files-found: error
