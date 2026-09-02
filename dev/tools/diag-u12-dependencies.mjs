@@ -1,0 +1,15 @@
+import { chromium } from 'playwright';
+const browser=await chromium.launch({headless:true});
+const page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
+await page.goto('http://127.0.0.1:4173',{waitUntil:'networkidle'});
+await page.waitForFunction(()=>document.querySelector('#boot')?.hidden===true,{timeout:20000});
+await page.locator('.rail-item[data-view="dependencies"]').click();
+await page.waitForSelector('#depSvg .node[data-id]');
+await page.waitForTimeout(700);
+const measure=async()=>page.evaluate(()=>{const svg=document.querySelector('#depSvg'),root=svg?.querySelector('.node[data-id] .bg'),host=document.querySelector('.view-host'),drawer=document.querySelector('#drawer'),g=document.querySelector('#depGraph'),v=svg?.viewBox?.baseVal;const rect=x=>{const r=x?.getBoundingClientRect();return r?{x:r.x,y:r.y,w:r.width,h:r.height,cx:r.x+r.width/2,cy:r.y+r.height/2}:null};return{host:rect(host),svg:rect(svg),root:rect(root),drawer:rect(drawer),viewBox:v?{w:v.width,h:v.height}:null,transform:g?.getAttribute('transform'),camera:window.state?.camera?.dependencies||null,spatial:window.state?.spatialViewport?.dependencies||null,anchor:window.state?.dependencyCameraAnchor||null}});
+const before=await measure();
+await page.locator('#depSvg .node[data-id]').first().locator('.bg').click();
+await page.waitForTimeout(1200);
+const after=await measure();
+console.log(JSON.stringify({before,after}));
+await browser.close();
