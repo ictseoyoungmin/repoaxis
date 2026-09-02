@@ -1,0 +1,43 @@
+name: u04-structure-snapshot
+
+on:
+  push:
+    branches:
+      - feat/u04-structure-progressive-disclosure
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: node bin/repoaxis build
+      - name: Start viewer
+        run: |
+          node bin/repoaxis view --no-open --port 4173 > /tmp/repoaxis-viewer.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/api/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/repoaxis-viewer.log
+          exit 1
+      - run: node dev/tools/capture-u04-structure.mjs
+      - run: node bin/repoaxis snapshot --output u04-structure-progressive-disclosure.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: u04-structure-progressive-disclosure
+          path: |
+            u04-structure-overview.png
+            u04-structure-focus.png
+            u04-structure-progressive-disclosure.html
+          retention-days: 7
