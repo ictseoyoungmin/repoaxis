@@ -46,6 +46,7 @@ test('whole topology macro targets expose visible identity and keyboard affordan
   const html=context.structureCard(nodes['folder:src'],100,120,{mode:'overview'});
   assert.match(html,/class="node macro-node/);
   assert.match(html,/class="macro-label"/);
+  assert.match(html,/class="macro-target"/);
   assert.match(html,/>src\//);
   assert.match(html,/role="button"/);
   assert.match(html,/tabindex="0"/);
