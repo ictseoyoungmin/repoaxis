@@ -7,7 +7,7 @@ await page.locator("#boot").waitFor({ state: "hidden" });
 
 await page.keyboard.press("Control+K");
 await page.locator("#searchOverlay.show").waitFor();
-await page.locator("#searchInput").fill("viewer");
+await page.locator("#searchInput").fill("test.mjs");
 await page.locator(".search-result.active").waitFor();
 await page.keyboard.press("ArrowDown");
 await page.keyboard.press("ArrowDown");
@@ -19,10 +19,8 @@ await page.screenshot({ path: "u03-keyboard-search.png", fullPage: false });
 
 await page.keyboard.press("Enter");
 await page.locator("#content.drawer-open").waitFor();
-await page.locator("#searchOverlay.show").waitFor({ state: "detached" }).catch(async()=>{
-  const shown = await page.locator("#searchOverlay").evaluate(el=>el.classList.contains("show"));
-  if (shown) throw new Error("search overlay remained open after Enter");
-});
+const shown = await page.locator("#searchOverlay").evaluate(el=>el.classList.contains("show"));
+if (shown) throw new Error("search overlay remained open after Enter");
 const entityName = (await page.locator("#entityName").textContent())?.trim();
 if (!entityName || entityName === "Repository") throw new Error("Inspector did not land on a search result");
 await page.screenshot({ path: "u03-keyboard-destination.png", fullPage: false });
