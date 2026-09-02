@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const VIEWER0 = fileURLToPath(new URL("../../../skills/repoaxis/viewer/viewer-0.js", import.meta.url));
 const VIEWER2 = fileURLToPath(new URL("../../../skills/repoaxis/viewer/viewer-2.js", import.meta.url));
+const VIEWER3 = fileURLToPath(new URL("../../../skills/repoaxis/viewer/viewer-3.js", import.meta.url));
 const VIEWER4 = fileURLToPath(new URL("../../../skills/repoaxis/viewer/viewer-4.js", import.meta.url));
 const source = fs.readFileSync(VIEWER0, "utf8");
 
@@ -76,11 +77,16 @@ test("single-lane changes retain their operation code and exact lane detail", ()
 
 test("Changes selection, filters, and stats consume structured Git lanes instead of display text", () => {
   const viewer2 = fs.readFileSync(VIEWER2, "utf8");
+  const viewer3 = fs.readFileSync(VIEWER3, "utf8");
   const viewer4 = fs.readFileSync(VIEWER4, "utf8");
   assert.match(viewer2, /hasStagedState\(c\)/);
   assert.match(viewer2, /hasWorkingState\(c\)/);
+  assert.match(viewer3, /filter\(hasStagedState\)/);
+  assert.match(viewer3, /filter\(hasWorkingState\)/);
   assert.match(viewer4, /hasStagedState\(c\)/);
   assert.match(viewer4, /hasWorkingState\(c\)/);
-  assert.doesNotMatch(viewer2, /stage\.includes\(['"]Working['"]\)/);
-  assert.doesNotMatch(viewer4, /stage\.includes\(['"]Working['"]\)/);
+  for (const viewer of [viewer2, viewer3, viewer4]) {
+    assert.doesNotMatch(viewer, /stage\.includes\(['"]Working['"]\)/);
+    assert.doesNotMatch(viewer, /stage\.includes\(['"]Staged['"]\)/);
+  }
 });
