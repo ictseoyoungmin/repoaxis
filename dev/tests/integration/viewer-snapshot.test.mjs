@@ -66,7 +66,10 @@ test("frozen viewer snapshot reuses the canonical viewer shell and embeds all li
   assert.equal(payload.responses["/api/index"].index.generated.git_changes.some((change) => change.path === "src/util.js"), true);
 });
 
-test("repoaxis snapshot CLI writes the standalone artifact", () => {
+test("repoaxis snapshot is a first-class CLI command and writes the standalone artifact", () => {
+  const help = execFileSync(process.execPath, [BIN, "help"], { encoding: "utf8" });
+  assert.match(help, /repoaxis snapshot \[--root PATH\] \[--output FILE\]/);
+
   const root = createRepo();
   const output = path.join(root, "snapshot.html");
   const stdout = execFileSync(process.execPath, [BIN, "snapshot", "--root", root, "--output", output], { encoding: "utf8" });

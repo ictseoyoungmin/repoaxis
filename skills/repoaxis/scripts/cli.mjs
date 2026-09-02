@@ -20,6 +20,7 @@ import {
 } from "../lib/query.mjs";
 import { validateIndex } from "../lib/schema.mjs";
 import { startViewer } from "../lib/view-server.mjs";
+import { writeViewerSnapshot } from "../lib/view-snapshot.mjs";
 
 function print(value) {
   if (typeof value === "string") process.stdout.write(`${value}\n`);
@@ -72,7 +73,7 @@ function parsePort(value) {
 }
 
 function help() {
-  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis view [--root PATH] [--port N] [--no-open]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis unreferenced [--index FILE]\n  repoaxis context TARGET [--index FILE]\n  repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]\n  repoaxis note TARGET [TEXT...] [--clear] [--index FILE]\n  repoaxis notes [--index FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nOperational commands refresh the default .repoaxis.json when Git HEAD or working-tree content changed. Passing --index FILE selects an explicit snapshot and disables automatic refresh. The viewer binds only to 127.0.0.1 and reads the same fresh default index. Unreferenced output is conservative structural evidence, never a dead-code verdict. The repository and current working tree remain authoritative.`;
+  return `repoaxis ${REPOAXIS_VERSION}\n\nUsage:\n  repoaxis build [--root PATH] [--output FILE] [--reason TEXT]\n  repoaxis view [--root PATH] [--port N] [--no-open]\n  repoaxis snapshot [--root PATH] [--output FILE]\n  repoaxis validate [FILE]\n  repoaxis summary [FILE]\n  repoaxis find QUERY [--index FILE] [--limit N]\n  repoaxis show TARGET [--index FILE]\n  repoaxis refs TARGET [--index FILE]\n  repoaxis parents TARGET [--index FILE]\n  repoaxis children TARGET [--index FILE]\n  repoaxis changed [--staged] [--index FILE]\n  repoaxis unreferenced [--index FILE]\n  repoaxis context TARGET [--index FILE]\n  repoaxis why TARGET [--index FILE] [--max-depth N] [--max-paths N]\n  repoaxis note TARGET [TEXT...] [--clear] [--index FILE]\n  repoaxis notes [--index FILE]\n  repoaxis doctor [--root PATH]\n  repoaxis node-id TYPE PATH [QUALIFIED_NAME]\n  repoaxis version\n  repoaxis help\n\nOperational commands refresh the default .repoaxis.json when Git HEAD or working-tree content changed. Passing --index FILE selects an explicit index snapshot and disables automatic refresh. The live viewer binds only to 127.0.0.1 and reads the same fresh default index. The snapshot command exports that canonical viewer as frozen self-contained HTML. Unreferenced output is conservative structural evidence, never a dead-code verdict. The repository and current working tree remain authoritative.`;
 }
 
 async function main() {
@@ -98,6 +99,13 @@ async function main() {
     if (args.length) throw new Error(`unexpected arguments: ${args.join(" ")}`);
     const viewer = await startViewer({ root, port, open: !noOpen });
     return print({ ok: true, url: viewer.url, root: viewer.root });
+  }
+
+  if (command === "snapshot") {
+    const root = takeOption(args, "--root", process.cwd());
+    const output = takeOption(args, "--output", null);
+    if (args.length) throw new Error(`unexpected arguments: ${args.join(" ")}`);
+    return print(await writeViewerSnapshot({ root, output }));
   }
 
   if (command === "validate" || command === "summary") {

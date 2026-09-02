@@ -6,7 +6,7 @@ Repoaxis lets coding agents query repository structure before broad source scans
 
 The index contains deterministic folder/file hierarchy, JavaScript (`.js`, `.mjs`, `.cjs`) class/function symbols, canonical containment, source ranges/signatures, repository-local `imports` edges, exact Git working/staged state, current-path last-file commit context, and changed paths such as deletions. Reverse import relationships are derived instead of stored twice.
 
-Default operational commands keep `.repoaxis.json` current on demand. Repoaxis compares a compact repository fingerprint and rebuilds when the index is missing or stale. No always-on daemon is required. Passing `--index FILE` explicitly opts into fixed snapshot behavior instead.
+Default operational commands keep `.repoaxis.json` current on demand. Repoaxis compares a compact repository fingerprint and rebuilds when the index is missing or stale. No always-on daemon is required. Passing `--index FILE` explicitly opts into fixed index-snapshot behavior instead.
 
 Durable repository notes are authored separately from generated structure. They are projected into `.repoaxis.json` for consumers and also stored under Git metadata so deleting and rebuilding the derived index does not destroy repository memory.
 
@@ -25,6 +25,14 @@ npx -y repoaxis@latest view
 ```
 
 `build` writes `.repoaxis.json` at the Git root. `summary`, `changed`, and `unreferenced` give useful repository-wide orientation without opening source files, and `view` opens the read-only localhost human surface.
+
+To preserve the current human surface as one portable frozen artifact:
+
+```bash
+npx -y repoaxis@latest snapshot --output repoaxis-snapshot.html
+```
+
+The snapshot is the same canonical viewer shell with the current index, Git display metadata, and HEAD history embedded at capture time. It opens later without a Repoaxis server and does not refresh repository data after capture.
 
 When you know or can search for a target, narrow before reading source:
 
@@ -69,6 +77,8 @@ For local Claude Code development, see `docs/installation.md`. The CLI remains i
 
 `repoaxis view` starts a read-only structural viewer on `127.0.0.1`. It shows the canonical folder/file/class/function tree, distinct working/staged Git badges, a complete Changes surface including deleted paths, last-file commit context, stored annotations, repository-local imports and reverse imports, and a bounded dependency graph. The browser polls the local viewer API while open, and the API reuses Repoaxis freshness checks so the view follows the working tree without an always-on daemon.
 
+`repoaxis snapshot` exports that same product shell as a self-contained frozen HTML file. The export inlines the shipped viewer assets and the current read-only viewer responses rather than maintaining a separate snapshot UI or repository model. Snapshot mode is intentionally frozen: it preserves the captured Structure, Dependencies, Changes, Graph, Inspector, Git overlays, and navigation but never claims to remain current after capture.
+
 ## Distribution surfaces
 
 - `.agents/plugins/marketplace.json` — repository-level Codex/ChatGPT marketplace catalog.
@@ -86,6 +96,7 @@ The runtime implementation exists once under `skills/repoaxis/`; the package ent
 ```text
 repoaxis build
 repoaxis view
+repoaxis snapshot
 repoaxis validate
 repoaxis summary
 repoaxis find
@@ -107,6 +118,6 @@ Operational query and annotation commands refresh the default `.repoaxis.json` w
 
 `note` and `notes` provide the persistent memory surface. New notes can only be attached to a current resolved node. Default repository notes are stored under Git metadata and projected into the current index, so deleting `.repoaxis.json` does not delete them. If a node later disappears, the annotation is retained and reported as orphaned until it is explicitly cleared by exact node ID.
 
-Use `--index FILE` on operational commands when you intentionally want to query or mutate an explicit snapshot without automatic refresh. The human viewer intentionally follows only the default current repository index and is read-only.
+Use `--index FILE` on operational commands when you intentionally want to query or mutate an explicit index snapshot without automatic refresh. `repoaxis view` intentionally follows only the default current repository index and is read-only; `repoaxis snapshot` captures one frozen HTML projection of that same viewer state.
 
 See `docs/cli.md`, `docs/viewer.md`, and `docs/installation.md`.
