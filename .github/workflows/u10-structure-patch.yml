@@ -1,4 +1,4 @@
-name: u10-structure-patch
+name: u10-structure-hit-fix
 on:
   push:
     branches: [feat/u10-structure-direct-manipulation]
@@ -14,13 +14,26 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: node dev/tools/patch-u10-structure.mjs
+      - name: Make Structure containment edges non-interactive
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const path='skills/repoaxis/viewer/viewer-base.css';
+          let css=fs.readFileSync(path,'utf8');
+          const anchor='.edge{fill:none;stroke:#cbd1dc;stroke-width:1.2;vector-effect:non-scaling-stroke}';
+          const rule='.structure-svg .edge{pointer-events:none}';
+          if(!css.includes(rule)){
+            if(!css.includes(anchor))throw new Error('Missing edge CSS anchor');
+            css=css.replace(anchor,anchor+rule);
+            fs.writeFileSync(path,css);
+          }
+          NODE
       - run: npm ci
       - run: npm run check
-      - name: Commit U10 Structure direct manipulation
+      - name: Commit U10 Structure hit-test correction
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add skills/repoaxis/viewer/viewer-1.js skills/repoaxis/viewer/viewer-base.css dev/tests/integration/viewer-structure-interaction.test.mjs
-          git commit -m "U10: make Structure overview directly inspectable"
+          git add skills/repoaxis/viewer/viewer-base.css
+          git commit -m "U10: keep Structure edges out of hit testing"
           git push origin HEAD:feat/u10-structure-direct-manipulation
