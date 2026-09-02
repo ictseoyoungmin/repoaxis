@@ -1,0 +1,48 @@
+name: u07-graph-routing-snapshot
+
+on:
+  push:
+    branches:
+      - feat/u07-graph-routing-parity
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - name: Build clean capture index
+        run: |
+          rm -f .github/workflows/u07-graph-routing-snapshot.yml dev/tools/capture-u07-graph-routing.mjs
+          node bin/repoaxis build
+      - name: Start viewer
+        run: |
+          node bin/repoaxis view --no-open --port 4173 > /tmp/repoaxis-viewer.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/api/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/repoaxis-viewer.log
+          exit 1
+      - name: Restore capture helper
+        run: git checkout HEAD -- dev/tools/capture-u07-graph-routing.mjs
+      - run: node dev/tools/capture-u07-graph-routing.mjs
+      - run: node bin/repoaxis snapshot --output u07-graph-routing-parity.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: u07-graph-routing-parity
+          path: |
+            u07-graph-routed-overview.png
+            u07-graph-routed-hover.png
+            u07-graph-routing-parity.html
+          retention-days: 7
