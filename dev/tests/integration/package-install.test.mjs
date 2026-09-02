@@ -67,6 +67,7 @@ test("packed npm artifact installs and completes the documented first-run workfl
 
   const packageRoot = path.join(installDir, "node_modules", "repoaxis");
   assert.equal(fs.existsSync(path.join(packageRoot, "skills", "repoaxis", "SKILL.md")), true);
+  assert.equal(fs.existsSync(path.join(packageRoot, "skills", "repoaxis", "lib", "view-snapshot.mjs")), true);
   assert.equal(fs.existsSync(path.join(packageRoot, ".agents", "plugins", "marketplace.json")), true);
   assert.equal(fs.existsSync(path.join(packageRoot, ".codex-plugin", "plugin.json")), true);
   assert.equal(fs.existsSync(path.join(packageRoot, ".claude-plugin", "plugin.json")), true);
@@ -74,6 +75,7 @@ test("packed npm artifact installs and completes the documented first-run workfl
 
   const binary = path.join(installDir, "node_modules", ".bin", process.platform === "win32" ? "repoaxis.cmd" : "repoaxis");
   assert.equal(run(binary, ["version"], installDir), REPOAXIS_VERSION);
+  assert.match(run(binary, ["help"], installDir), /repoaxis snapshot \[--root PATH\] \[--output FILE\]/);
 
   const firstRunRoot = createFirstRunRepository(installDir);
   const doctor = jsonRun(binary, ["doctor"], firstRunRoot);
@@ -113,4 +115,13 @@ test("packed npm artifact installs and completes the documented first-run workfl
   const recovered = jsonRun(binary, ["context", "parseConfig"], firstRunRoot);
   assert.equal(recovered.annotation.agent_note, "First-run configuration boundary.");
   assert.ok(fs.existsSync(path.join(firstRunRoot, ".repoaxis.json")));
+
+  const snapshotFile = path.join(installDir, "first-run-snapshot.html");
+  const snapshot = jsonRun(binary, ["snapshot", "--root", firstRunRoot, "--output", snapshotFile], installDir);
+  assert.equal(snapshot.ok, true);
+  assert.equal(snapshot.output, snapshotFile);
+  const snapshotHtml = fs.readFileSync(snapshotFile, "utf8");
+  assert.match(snapshotHtml, /Repoaxis — Frozen Snapshot/);
+  assert.match(snapshotHtml, /window\.__REPOAXIS_SNAPSHOT__/);
+  assert.doesNotMatch(snapshotHtml, /(?:src|href)="\/viewer-/);
 });
