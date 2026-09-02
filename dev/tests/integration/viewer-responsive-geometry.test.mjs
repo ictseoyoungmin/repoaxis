@@ -27,8 +27,9 @@ test('spatial viewport reconciliation preserves the same world center as usable 
 test('Structure and Dependencies use the live host viewport instead of content-sized SVG viewBoxes',()=>{
   assert.ok(s1.includes("reconcileSpatialViewport('structure',spatialViewportSize())"));
   assert.ok(s1.includes("svg.setAttribute('viewBox'"));
-  assert.ok(s1.includes("reconcileSpatialViewport('dependencies',spatialViewportSize())"));
-  assert.ok(s1.includes('id="depSvg" viewBox="0 0 '));
+  assert.ok(s1.includes("depRect=depSvg?.getBoundingClientRect()"));
+  assert.ok(s1.includes("reconcileSpatialViewport('dependencies',{w:Math.max(640"));
+  assert.ok(s1.includes("depSvg?.setAttribute('viewBox'"));
 });
 
 test('Graph keeps its spacing-first world but exposes the current host as the camera viewport',()=>{
