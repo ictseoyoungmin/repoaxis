@@ -37,6 +37,7 @@ const metrics=await page.evaluate(()=>{
 if(metrics.edges<20)throw new Error('Graph capture is not dense enough: '+JSON.stringify(metrics));
 if((metrics.obstacleCounts.blocked||0)!==0)throw new Error('Blocked fallback routes remain: '+JSON.stringify(metrics));
 if(metrics.collisionEdges!==0)throw new Error('Foreign-node edge collisions remain: '+JSON.stringify(metrics));
+if((metrics.routeCounts.detour||0)>20)throw new Error('Too many complex detours remain: '+JSON.stringify(metrics));
 await page.screenshot({path:'u09-graph-dense-overview.png',fullPage:true});
 
 const target='#graphSvg .node[data-id="file:skills/repoaxis/lib/indexer.mjs"]';
@@ -48,7 +49,7 @@ if(await page.locator(target).count()){
     const edges=[...document.querySelectorAll('#graphSvg .graph-edge-base')];
     let best=null;for(const n of nodes){const id=n.dataset.id,degree=edges.filter(e=>e.dataset.from===id||e.dataset.to===id).length;if(!best||degree>best.degree)best={id,degree}}return best?.id||null;
   });
-  if(candidate)await page.hover(`#graphSvg .node[data-id="${CSS.escape(candidate)}"]`);
+  if(candidate)await page.locator('#graphSvg .node[data-id]').filter({has:page.locator('rect.bg')}).evaluateAll((els,id)=>{els.find(el=>el.dataset.id===id)?.dispatchEvent(new MouseEvent('mouseenter',{bubbles:true}))},candidate);
   await page.waitForTimeout(250);
 }
 const hover=await page.evaluate(()=>({context:document.querySelector('#graphHoverContext')?.textContent||'',active:[...document.querySelectorAll('#graphSvg .graph-edge-focus.graph-in,#graphSvg .graph-edge-focus.graph-out')].length}));
