@@ -21,7 +21,7 @@ function makeContext(){
     nodes,state,ROOT:'root',
     children(id){return Object.values(nodes).filter(n=>n.parent===id).sort((a,b)=>(rank[a.type]-rank[b.type])||a.repoPath.localeCompare(b.repoPath));},
     containingFile(n){let x=n;while(x?.parent){x=nodes[x.parent];if(x?.type==='file')return x}return n?.type==='file'?n:null;},
-    statusFor:()=>null,
+    statusFor:()=>null,gitScopeSummary:()=>null,gitScopeLabel:()=>'',
     colorFor:()=>['#fff','#ddd','#333'],
     badgeSvg:()=>'',
     esc:String,
