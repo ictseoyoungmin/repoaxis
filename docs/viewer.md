@@ -9,6 +9,20 @@ repoaxis view --no-open
 repoaxis view --root ../another-repository
 ```
 
+## Frozen snapshot export
+
+`repoaxis snapshot` writes the same canonical product viewer as a self-contained HTML artifact with a frozen copy of the current Repoaxis index, repository display metadata, and HEAD history.
+
+```bash
+repoaxis snapshot
+repoaxis snapshot --output artifacts/repoaxis.html
+repoaxis snapshot --root ../another-repository --output ./snapshot.html
+```
+
+The default output is `repoaxis-snapshot.html` at the selected repository root. The command starts the normal loopback viewer on an ephemeral port, reads its exact HTML/CSS/JS and the same `/api/index`, `/api/meta`, and `/api/history` responses, then closes the server and inlines those resources into one HTML file. Snapshot mode therefore does not maintain a second viewer implementation or a second repository model.
+
+A frozen snapshot is read-only and does not refresh after capture. Opening it later does not require a Repoaxis server and does not fetch repository data over the network. Repository links derived from the captured Git remote may still open the corresponding web host when the user explicitly follows them.
+
 ## Canonical data boundary
 
 The viewer is a projection of the same live Repoaxis index used by the CLI. Git plus the working tree remain authoritative; `.repoaxis.json` remains the rebuildable derived index. The browser does not maintain a second repository model and the viewer contains no repository fixture data.
@@ -42,15 +56,17 @@ Changing the overlay changes presentation only; it does not alter the canonical 
 
 ## Freshness
 
-The browser requests `/api/index` periodically while the viewer is open. Each request uses Repoaxis query-time freshness detection. If HEAD/ref, staged state, or relevant working-tree content changes, the default index is rebuilt before the response is returned. If HEAD changes, `/api/meta` and `/api/history` are refreshed as well.
+The browser requests `/api/index` periodically while the live viewer is open. Each request uses Repoaxis query-time freshness detection. If HEAD/ref, staged state, or relevant working-tree content changes, the default index is rebuilt before the response is returned. If HEAD changes, `/api/meta` and `/api/history` are refreshed as well.
 
-This keeps the viewer current without an always-on daemon or another source of truth.
+Frozen snapshot exports capture one result of this same freshness path and intentionally stop there; they never claim to remain current after capture.
+
+This keeps the live viewer current without an always-on daemon or another source of truth while making exported evidence deterministic.
 
 ## Local server boundary
 
-The server binds only to `127.0.0.1`. Static viewer assets are served only from the packaged `skills/repoaxis/viewer/` directory. Unknown routes return 404 and non-GET requests return 405.
+The live server binds only to `127.0.0.1`. Static viewer assets are served only from the packaged `skills/repoaxis/viewer/` directory. Unknown routes return 404 and non-GET requests return 405.
 
-The four main surfaces can be deep-linked with `#structure`, `#dependencies`, `#changes`, and `#graph`.
+The four main surfaces can be deep-linked with `#structure`, `#dependencies`, `#changes`, and `#graph`. The same hash navigation works in a frozen snapshot because all viewer assets are inlined.
 
 ## Interpretation limits
 
