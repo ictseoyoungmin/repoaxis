@@ -1,0 +1,44 @@
+name: u05-dependency-snapshot
+
+on:
+  push:
+    branches:
+      - feat/u05-dependency-navigation
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: node bin/repoaxis build
+      - name: Start viewer
+        run: |
+          node bin/repoaxis view --no-open --port 4173 > /tmp/repoaxis-viewer.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/api/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/repoaxis-viewer.log
+          exit 1
+      - run: node dev/tools/capture-u05-dependency-navigation.mjs
+      - run: node bin/repoaxis snapshot --output u05-dependency-navigation.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: u05-dependency-navigation
+          path: |
+            u05-dependency-inspect.png
+            u05-dependency-reroot.png
+            u05-dependency-back.png
+            u05-dependency-navigation.html
+          retention-days: 7
