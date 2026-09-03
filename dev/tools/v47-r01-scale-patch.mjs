@@ -24,7 +24,7 @@ rebuildLiveGraphInputsV47=function(){
   liveV47.graphWorld={W:Math.max(1450,maxX+margin),H:Math.max(820,maxY+margin)};
 };
 graphLayoutV11=function(){
-  const vp=viewportV11('#graphStage',860,520),world=liveV47.graphWorld||{W:1450,H:820},W=Math.max(world.W,vp.w),H=Math.max(world.H,vp.h);graphPosV11={};for(const[id,p]of Object.entries(graphBasePosV11))graphPosV11[id]=p.slice();const viewW=Math.min(W,Math.max(860,Math.ceil(vp.w/.92))),viewH=Math.min(H,Math.max(520,Math.ceil(vp.h/.92)));graphWorldV27={W,H,viewW,viewH};$('#graphSvg').setAttribute('viewBox',\`0 0 \${viewW} \${viewH}\`);graphRoutingStateV22={used:[]};buildGraphPortPlanV23();buildGraphBusPlanV27();return{W,H,viewW,viewH};
+  const vp=viewportV11('#graphStage',860,520),world=liveV47.graphWorld||{W:1450,H:820},W=Math.max(world.W,vp.w),H=Math.max(world.H,vp.h);graphPosV11={};for(const[id,p]of Object.entries(graphBasePosV11))graphPosV11[id]=p.slice();const viewW=Math.min(W,Math.max(860,Math.ceil(vp.w/.92))),viewH=Math.min(H,Math.max(520,Math.ceil(vp.h/.92)));graphWorldV27={W,H,viewW,viewH};$('#graphSvg').setAttribute('viewBox','0 0 '+viewW+' '+viewH);graphRoutingStateV22={used:[]};buildGraphPortPlanV23();buildGraphBusPlanV27();return{W,H,viewW,viewH};
 };
 function patchLiveCountR01(){const c=$('#cardCount');if(!c)return;if(state.view==='structure')c.textContent=Math.max(0,Object.keys(overviewPosV11).length-1);else if(state.view==='dependencies')c.textContent=$$('#dependenciesCanvas .dt-node').length;else if(state.view==='graph')c.textContent=Object.keys(graphPosV11).length;else if(state.view==='changes')c.textContent=changes.length}
 const renderOverviewCountR01=renderOverview;renderOverview=function(){const r=renderOverviewCountR01();patchLiveCountR01();return r};
