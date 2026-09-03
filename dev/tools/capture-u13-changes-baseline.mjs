@@ -15,7 +15,7 @@ await sh('git',['add','dev/fixtures/u13-staged-added.js']);
 await fs.writeFile(path.join(root,'dev/fixtures/u13-working-untracked.js'),'export const workingUntracked = true;\n');
 await sh('git',['rm','dev/tests/integration/viewer-graph-spacing.test.mjs']);
 
-const server=spawn(process.execPath,['bin/repoaxis.mjs','view','--root',root,'--port','4173'],{cwd:root,stdio:'inherit'});
+const server=spawn(process.execPath,['bin/repoaxis','view','--root',root,'--port','4173'],{cwd:root,stdio:'inherit'});
 await new Promise(r=>setTimeout(r,2500));
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage({viewport:{width:1600,height:1000}});
