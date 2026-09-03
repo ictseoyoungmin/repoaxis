@@ -18,7 +18,9 @@ jobs:
           node-version: 20
           cache: npm
       - name: Apply live adapter
-        run: node dev/tools/apply-v47-r01.mjs
+        run: |
+          node dev/tools/apply-v47-r01.mjs
+          node -e "const fs=require('fs'),c=require('crypto'),s=fs.readFileSync('skills/repoaxis/viewer/repoaxis.html','utf8'),m=s.indexOf('<!-- V47-R01 LIVE DATA WIRING -->'); console.log('canonical_prefix_sha='+c.createHash('sha256').update(s.slice(0,m)).digest('hex'))"
       - name: Validate
         run: |
           npm ci
