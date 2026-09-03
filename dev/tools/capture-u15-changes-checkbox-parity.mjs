@@ -38,7 +38,7 @@ invariant(s.row.svgOpacity==='0'&&s.master.svgOpacity==='0',`off SVG should be h
 await page.screenshot({path:'u15-checkbox-off.png',fullPage:true});
 
 const first=page.locator('.change-row .change-select[data-check]').first();
-await first.hover();await page.waitForTimeout(120);
+await first.hover();await page.waitForTimeout(240);
 s=await styles();
 invariant(s.row.borderColor==='rgb(169, 164, 255)',`hover border mismatch: ${s.row.borderColor}`);
 invariant(s.row.boxShadow.includes('rgba(98, 91, 255, 0.08)'),`hover halo missing: ${s.row.boxShadow}`);
