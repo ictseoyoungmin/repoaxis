@@ -18,7 +18,9 @@ jobs:
           node-version: 20
           cache: npm
       - name: Apply canonical reset
-        run: python .v47-r00/apply.py
+        run: |
+          sed -i 's#chunk-02.b64#gz-00.b64#' .v47-r00/apply.py
+          python .v47-r00/apply.py
       - name: Validate reset
         run: |
           npm ci
