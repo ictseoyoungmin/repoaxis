@@ -8,7 +8,7 @@ const V3=fileURLToPath(new URL("../../../skills/repoaxis/viewer/viewer-3.js",imp
 const v0=fs.readFileSync(V0,"utf8"),v3=fs.readFileSync(V3,"utf8");
 
 test("Git badges widen inward for multi-character labels",()=>{
-  assert.ok(v0.includes("actualW=Math.max(w,10+label.length*5)"));
+  assert.ok(v0.includes("actualW=Math.max(w,14+label.length*5)"));
   assert.ok(v0.includes("drawX=x+w-actualW"));
   assert.ok(v0.includes('class="git-badge"'));
 });
