@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+const p='skills/repoaxis/viewer/repoaxis.html';
+let s=fs.readFileSync(p,'utf8');
+const replacements=[
+  ["rebuildLiveGraphInputsV47=function(){\n  const connected=new Set(importEdges.flat()),fs=files().filter(f=>connected.has(f.id)).sort((a,b)=>a.path.localeCompare(b.path)),groups=new Map();\n  for(const f of fs){const g=liveTopGroupV47(f),key=g?.id||'root',label=g?.type==='folder'?g.label:'root/';if(!groups.has(key))groups.set(key,{id:key,label,members:[],score:0});const rec=groups.get(key);rec.members.push(f.id);rec.score+=incoming(f.id).length+outgoing(f.id).length}\n  const gs=[...groups.values()].sort((a,b)=>b.score-a.score||a.label.localeCompare(b.label));graphClustersV15.splice(0,graphClustersV15.length,...gs.map(({score,...g})=>g));",
+  "function liveGraphScopeR01(f){const p=String(f?.path||'');const cut=p.indexOf('/');if(cut<0)return{id:'root',label:'root/'};const label=p.slice(0,cut+1),folder=tree.find(n=>n.type==='folder'&&n.path===label);return{id:folder?.id||('scope:'+label),label}}\nrebuildLiveGraphInputsV47=function(){\n  const connected=new Set(importEdges.flat()),fs=files().filter(f=>connected.has(f.id)).sort((a,b)=>a.path.localeCompare(b.path)),groups=new Map();\n  for(const f of fs){const g=liveGraphScopeR01(f),key=g.id,label=g.label;if(!groups.has(key))groups.set(key,{id:key,label,members:[],score:0});const rec=groups.get(key);rec.members.push(f.id);rec.score+=incoming(f.id).length+outgoing(f.id).length}\n  const degree=id=>incoming(id).length+outgoing(id).length;const gs=[...groups.values()].sort((a,b)=>b.score-a.score||a.label.localeCompare(b.label));for(const g of gs)g.members.sort((a,b)=>degree(b)-degree(a)||(byId[a]?.path||a).localeCompare(byId[b]?.path||b));graphClustersV15.splice(0,graphClustersV15.length,...gs.map(({score,...g})=>g));"],
+  ["c.textContent=$('#dependenciesCanvas .dt-node').length","c.textContent=$$('#dependenciesCanvas .dt-node').length"]
+];
+for(const [from,to] of replacements){const count=s.split(from).length-1;if(count!==1)throw new Error(`expected one finalize target, got ${count}: ${from.slice(0,80)}`);s=s.replace(from,to)}
+fs.writeFileSync(p,s);
+console.log('finalized live graph scopes and counts');
