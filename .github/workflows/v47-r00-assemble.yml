@@ -26,12 +26,21 @@ jobs:
           test "$(wc -c < .v47-r00/gz-01.b64)" -eq 20000
           test "$(wc -c < .v47-r00/gz-02.b64)" -eq 20000
           test "$(wc -c < .v47-r00/gz-03.b64)" -eq 15000
+          test "$(wc -c < .v47-r00/gz-03d.b64)" -eq 5000
           test "$(wc -c < .v47-r00/gz-04.b64)" -eq 264
       - name: Apply canonical reset
         run: |
-          python -c "from pathlib import Path; p=Path('.v47-r00/apply.py'); s=p.read_text(); a=s.index('parts=['); b=s.index(chr(10)+'encoded=',a); line=\"parts=[ROOT/'.v47-r00/chunk-00.b64',ROOT/'.v47-r00/chunk-01.b64',ROOT/'.v47-r00/chunk-02.b64',ROOT/'.v47-r00/gz-00d.b64',ROOT/'.v47-r00/gz-01.b64',ROOT/'.v47-r00/gz-02.b64',ROOT/'.v47-r00/gz-03.b64',ROOT/'.v47-r00/gz-04.b64']\"; p.write_text(s[:a]+line+s[b:])"
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.v47-r00/apply.py')
+          s=p.read_text()
+          s=s.replace('5cbb82c3014d32e88a64860cc55fa6213813b353a98b6b3b151c7eef745a960d','74378ad9bb5b1c5304b989174454d71a38cd1f9c7538a4bff410f35469a01507')
+          a=s.index('parts=['); b=s.index('\nencoded=',a)
+          line="parts=[ROOT/'.v47-r00/chunk-00.b64',ROOT/'.v47-r00/chunk-01.b64',ROOT/'.v47-r00/chunk-02.b64',ROOT/'.v47-r00/gz-00d.b64',ROOT/'.v47-r00/gz-01.b64',ROOT/'.v47-r00/gz-02.b64',ROOT/'.v47-r00/gz-03.b64',ROOT/'.v47-r00/gz-03d.b64',ROOT/'.v47-r00/gz-04.b64']"
+          p.write_text(s[:a]+line+s[b:])
+          PY
           python .v47-r00/apply.py
-          echo '5cbb82c3014d32e88a64860cc55fa6213813b353a98b6b3b151c7eef745a960d  skills/repoaxis/viewer/repoaxis.html' | sha256sum -c -
+          echo '74378ad9bb5b1c5304b989174454d71a38cd1f9c7538a4bff410f35469a01507  skills/repoaxis/viewer/repoaxis.html' | sha256sum -c -
       - name: Validate reset
         run: |
           npm ci
