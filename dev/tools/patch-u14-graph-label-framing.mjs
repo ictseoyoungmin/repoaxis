@@ -10,10 +10,11 @@ fs.writeFileSync(v0Path,v0);
 
 const v2Path='skills/repoaxis/viewer/viewer-2.js';
 let v2=fs.readFileSync(v2Path,'utf8');
-const oldCamera=`function graphPrepareCamera(projection,L,sel){const key=graphCameraAnchorKey(projection,sel);if(state.graphCameraAnchor===key)return;const p=L.pos[sel?.id]||[L.viewW/2,L.viewH/2],s=.92;state.camera.graph={s,x:L.viewW/2-p[0]*s,y:L.viewH/2-p[1]*s};state.graphCameraAnchor=key}`;
+const cameraRe=/function graphPrepareCamera\(projection,L,sel\)\{.*?state\.graphCameraAnchor=key\}/;
+const cameraMatch=v2.match(cameraRe);
+if(!cameraMatch)throw new Error('graphPrepareCamera source did not match');
 const newCamera=`function graphPrepareCamera(projection,L,sel){const key=graphCameraAnchorKey(projection,sel);if(state.graphCameraAnchor===key)return;const s0=.92;if(projection.mode==='impact'&&projection.list?.length){const pts=projection.list.map(f=>L.pos[f.id]).filter(Boolean);if(pts.length){const minX=Math.min(...pts.map(p=>p[0]))-GRAPH_NODE_GEOMETRY.halfW,maxX=Math.max(...pts.map(p=>p[0]))+GRAPH_NODE_GEOMETRY.halfW,minY=Math.min(...pts.map(p=>p[1]))-GRAPH_NODE_GEOMETRY.halfH,maxY=Math.max(...pts.map(p=>p[1]))+GRAPH_NODE_GEOMETRY.halfH,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),fit=Math.min(s0,(L.viewW-160)/contentW,(L.viewH-150)/contentH),s=Math.max(.35,fit),cx=(minX+maxX)/2,cy=(minY+maxY)/2;state.camera.graph={s,x:L.viewW/2-cx*s,y:L.viewH/2-cy*s};state.graphCameraAnchor=key;return}}const p=L.pos[sel?.id]||[L.viewW/2,L.viewH/2],s=s0;state.camera.graph={s,x:L.viewW/2-p[0]*s,y:L.viewH/2-p[1]*s};state.graphCameraAnchor=key}`;
-if(!v2.includes(oldCamera))throw new Error('graphPrepareCamera source did not match');
-v2=v2.replace(oldCamera,newCamera);
+v2=v2.replace(cameraRe,()=>newCamera);
 fs.writeFileSync(v2Path,v2);
 
 const testPath='dev/tests/integration/viewer-graph-framing.test.mjs';
