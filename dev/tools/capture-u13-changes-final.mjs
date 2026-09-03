@@ -60,7 +60,7 @@ await page.screenshot({path:'u13-changes-working-partial.png',fullPage:true});
 
 await page.locator('#analyzeSet').click();
 await page.waitForTimeout(500);
-const impact=await page.evaluate(()=>({title:document.querySelector('#cardTitle')?.textContent,scope:document.querySelector('#graphScope')?.textContent,graphNodes:document.querySelectorAll('#graphSvg .g-node').length}));
+const impact=await page.evaluate(()=>({title:document.querySelector('#cardTitle')?.textContent,scope:document.querySelector('#graphScope')?.textContent,graphNodes:document.querySelectorAll('#graphSvg .node[data-id]').length}));
 invariant(impact.title==='Graph'&&impact.graphNodes>=3,`impact destination mismatch: ${JSON.stringify(impact)}`);
 await page.screenshot({path:'u13-changes-impact-destination.png',fullPage:true});
 
