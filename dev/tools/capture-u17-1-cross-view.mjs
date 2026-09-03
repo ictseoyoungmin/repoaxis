@@ -39,7 +39,7 @@ async function arrival(view,name){
 
 try{
   await page.goto(viewer.url,{waitUntil:"networkidle"});
-  await page.waitForSelector("#boot[hidden]");
+  await page.waitForFunction(()=>document.querySelector('#boot')?.hidden===true);
 
   await searchSelect("scheduleArrivalFeedback");
   metrics.checks.structure_symbol=await page.evaluate(()=>({view:state.view,selected:state.selected,label:document.querySelector('#selName')?.textContent||'',detail:document.querySelector('#selDetail')?.textContent||'',drawerOpen:document.querySelector('#content')?.classList.contains('drawer-open')||false}));
