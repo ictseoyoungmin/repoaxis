@@ -1359,7 +1359,7 @@ containmentLayoutV11=function(focus=false){
 };
 function liveGraphScopeR01(f){const p=String(f?.path||'');const cut=p.indexOf('/');if(cut<0)return{id:'root',label:'root/'};const label=p.slice(0,cut+1),folder=tree.find(n=>n.type==='folder'&&n.path===label);return{id:folder?.id||('scope:'+label),label}}
 rebuildLiveGraphInputsV47=function(){
-  const connected=new Set(importEdges.flat()),fs=files().filter(f=>connected.has(f.id)).sort((a,b)=>a.path.localeCompare(b.path)),groups=new Map();
+  const connected=new Set(importEdges.flat()),changed=new Set(changes.filter(c=>c.id!=='ghost'&&byId[c.id]?.type==='file').map(c=>c.id)),fs=files().filter(f=>connected.has(f.id)||changed.has(f.id)).sort((a,b)=>a.path.localeCompare(b.path)),groups=new Map();
   for(const f of fs){const g=liveGraphScopeR01(f),key=g.id,label=g.label;if(!groups.has(key))groups.set(key,{id:key,label,members:[],score:0});const rec=groups.get(key);rec.members.push(f.id);rec.score+=incoming(f.id).length+outgoing(f.id).length}
   const degree=id=>incoming(id).length+outgoing(id).length;const gs=[...groups.values()].sort((a,b)=>b.score-a.score||a.label.localeCompare(b.label));for(const g of gs)g.members.sort((a,b)=>degree(b)-degree(a)||(byId[a]?.path||a).localeCompare(byId[b]?.path||b));graphClustersV15.splice(0,graphClustersV15.length,...gs.map(({score,...g})=>g));for(const k of Object.keys(graphClusterByMemberV16))delete graphClusterByMemberV16[k];for(const g of graphClustersV15)for(const id of g.members)graphClusterByMemberV16[id]=g.id;for(const k of Object.keys(graphBasePosV11))delete graphBasePosV11[k];
   const blocks=graphClustersV15.map(g=>{const cols=Math.max(1,Math.min(4,Math.ceil(Math.sqrt(g.members.length)))),rows=Math.ceil(g.members.length/cols);return{g,cols,rows,w:cols*188+116,h:rows*92+120}}),columns=3,gapX=44,gapY=54,margin=80;let y=margin,maxX=0,maxY=0;
@@ -1426,6 +1426,21 @@ const navigateSelectedToR03Base=navigateSelectedTo;
 navigateSelectedTo=function(view){
   const source=byId[state.selected]||byId.root,f=source.type==='file'?source:containingFile(source),r=navigateSelectedToR03Base(view);
   if(view==='graph'&&f)frameGraphSelectionR03(f.id);
+  return r;
+};
+
+
+
+/* R04 live Changes → Graph truth reconciliation. Keep changed roots in the bounded live graph and frame them on change-set arrival. */
+function frameChangeSetRootsR04(ids){
+  const pts=ids.map(id=>graphPosV11[id]).filter(Boolean);if(!pts.length)return;
+  const view=graphWorldV27||{},vw=view.viewW||860,vh=view.viewH||520,xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),minX=Math.min(...xs)-86,maxX=Math.max(...xs)+86,minY=Math.min(...ys)-58,maxY=Math.max(...ys)+58,bw=Math.max(172,maxX-minX),bh=Math.max(116,maxY-minY),s=Math.max(.55,Math.min(1,(vw-180)/bw,(vh-150)/bh)),cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+  state.cameras.graph={s,x:vw/2-cx*s,y:vh/2-cy*s};applyCamera('graph');
+}
+const openChangeSetGraphR04Base=openChangeSetGraphV18;
+openChangeSetGraphV18=function(mode='impact'){
+  const ids=changeSetValidV18(),r=openChangeSetGraphR04Base(mode);
+  if(ids.length)requestAnimationFrame(()=>requestAnimationFrame(()=>frameChangeSetRootsR04(ids)));
   return r;
 };
 
