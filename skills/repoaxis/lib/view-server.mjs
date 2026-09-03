@@ -17,6 +17,7 @@ const VIEWER_ASSETS = new Map([
   ["/viewer-2.js", ["viewer-2.js", "text/javascript; charset=utf-8"]],
   ["/viewer-3.js", ["viewer-3.js", "text/javascript; charset=utf-8"]],
   ["/viewer-4.js", ["viewer-4.js", "text/javascript; charset=utf-8"]],
+  ["/viewer-5.js", ["viewer-5.js", "text/javascript; charset=utf-8"]],
 ]);
 const LOOPBACK_HOST = "127.0.0.1";
 
