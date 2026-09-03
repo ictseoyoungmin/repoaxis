@@ -22,4 +22,4 @@ jobs:
         if: always()
         with:
           name: v47-r04-changes-probe
-          path: artifacts/v47-r04
+          path: ${{ runner.temp }}/v47-r04
