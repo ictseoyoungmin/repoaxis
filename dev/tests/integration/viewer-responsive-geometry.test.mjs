@@ -57,10 +57,16 @@ test('active spatial views rerender through a ResizeObserver when drawer or brow
 
 test('Whole Structure chooses a readable initial overview scale once, then viewport reconciliation preserves it',()=>{
   assert.ok(s1.includes('function structurePrepareCamera'));
-  assert.ok(s1.includes('scale=Math.min(1,fit)'));
-  assert.ok(!s1.includes('Math.max(.72,Math.min(1,fit))'));
+  assert.ok(s1.includes('readable=Math.min(1,Math.max(.72,vp.w/1180))'));
+  assert.ok(s1.includes('scale=Math.min(1,Math.max(readable,fit))'));
   assert.ok(s1.includes('state.structureCameraAnchor===key'));
   assert.ok(s1.includes('structurePrepareCamera(projection,L,vp)'));
+});
+
+test('cursor anchored zoom does not drift when the camera is already at a bound',()=>{
+  assert.ok(s0.includes('function reanchorZoomAtPoint'));
+  assert.ok(s0.includes('if(!Number.isFinite(before)||next===before)return'));
+  assert.ok(s4.includes('__repoaxisZoomBefore'));
 });
 
 

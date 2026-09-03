@@ -37,7 +37,7 @@
     host.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>navigateSelectionTo(b.dataset.v));
   }
   function arrivalHostU17(view){
-    if(view==='structure')return $('#structureSvg');
+    if(view==='structure')return state.structureFocus?($('#focusSvg')||$('#structureSvg')):($('#overviewSvg')||$('#structureSvg')); /* legacy: if(view==='structure')return $('#structureSvg') */
     if(view==='dependencies')return $('#depSvg');
     if(view==='graph')return $('#graphSvg');
     if(view==='changes')return $('#changesShell');

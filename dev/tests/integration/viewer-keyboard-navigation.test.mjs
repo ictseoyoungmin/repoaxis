@@ -33,6 +33,15 @@ test("search results expose one keyboard cursor and accessibility selection stat
   assert.match(source, /row\.setAttribute\('aria-selected',active\?'true':'false'\)/);
 });
 
+test("search results use structural ranking, token matching, and explicit totals", () => {
+  assert.match(source, /function searchRankV47/);
+  assert.match(source, /tokens\.every\(token=>hay\.includes\(token\)\)/);
+  assert.match(source, /sort\(\(a,b\)=>a\.rank-b\.rank/);
+  assert.match(source, /slice\(0,20\)/);
+  assert.match(source, /class=\"search-summary\"/);
+  assert.match(source, /showing \$\{shown\.length\}/);
+});
+
 test("Escape unwinds transient UI before closing the Inspector", () => {
   const start = source.indexOf("function handleEscape()");
   const end = source.indexOf("function toast", start);

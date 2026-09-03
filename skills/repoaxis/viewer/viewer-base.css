@@ -2,3 +2,80 @@
 .graph-hover-context{color:#404858;font-weight:650;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.graph-svg .node,.graph-svg .edge,.graph-svg .graph-scope{transition:opacity .12s,stroke .12s,fill .12s}.graph-svg.exploring .node{opacity:.16}.graph-svg.exploring .edge{opacity:.07}.graph-svg.exploring .graph-scope{opacity:.18}.graph-svg.exploring .node.graph-active,.graph-svg.exploring .node.graph-neighbor,.graph-svg.exploring .edge.graph-in,.graph-svg.exploring .edge.graph-out,.graph-svg.exploring .graph-scope.graph-related{opacity:1}.graph-svg .edge.graph-in{stroke:#7b74f4!important;stroke-width:2!important}.graph-svg .edge.graph-out{stroke:#0d9488!important;stroke-width:2!important}.graph-svg .node.graph-active .bg{stroke:#625bff!important;stroke-width:2!important;fill:#fbfaff!important}.graph-svg .node.graph-neighbor .bg{stroke:#bbb7f7}.graph-svg .graph-scope.graph-related .folder-scope{stroke:#d7d3ff;fill:rgba(248,247,255,.82)}
 
 .graph-svg .graph-edge-base{stroke:#c8cfdb;stroke-width:1.08;opacity:.62;stroke-linecap:round;stroke-linejoin:round}.graph-svg .graph-edge-base.cross-folder{stroke-width:1.16;opacity:.7}.graph-svg .graph-edge-base.local{opacity:.52}.graph-svg .graph-edge-focus{opacity:0;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}.graph-svg .graph-edge-focus.graph-selected-in{opacity:1;stroke:#746df3}.graph-svg .graph-edge-focus.graph-selected-out{opacity:1;stroke:#0d9488}.graph-svg .graph-edge-focus.impact-focus{opacity:1;stroke:#625bff;stroke-width:2}.graph-svg.exploring .graph-edge-base{opacity:.045!important}.graph-svg.exploring .graph-edge-focus{opacity:0!important}.graph-svg.exploring .graph-edge-focus.graph-in{opacity:1!important;stroke:#746df3!important;stroke-width:2!important}.graph-svg.exploring .graph-edge-focus.graph-out{opacity:1!important;stroke:#0d9488!important;stroke-width:2!important}.graph-svg.exploring .graph-edge-focus.graph-selected-in:not(.graph-in),.graph-svg.exploring .graph-edge-focus.graph-selected-out:not(.graph-out){opacity:.08!important}.graph-svg .graph-edge-base.dim,.graph-svg .graph-edge-focus.dim{opacity:.06!important}
+.structure-svg{background:transparent;touch-action:none}
+.structure-svg #structureGraph{transform-box:fill-box;transform-origin:center;will-change:transform,opacity}
+.structure-svg .edge{stroke:#cbd1dc;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;opacity:.92;transition:stroke .18s ease,opacity .18s ease,stroke-width .18s ease}
+.structure-svg .edge.hot{stroke:#837cff;stroke-width:1.75;opacity:1}
+.structure-svg .macro-node{cursor:pointer;outline:none}
+.structure-svg .macro-node .macro-target{pointer-events:none}
+.structure-svg .macro-node .macro-hit{pointer-events:none;fill:transparent;stroke:transparent}
+.structure-svg .macro-node .overview-assist-zone{fill:rgba(98,91,255,.001);stroke:none;pointer-events:all;cursor:pointer}
+.structure-svg .macro-node .overview-hit-zone{fill:none;stroke:rgba(98,91,255,.001);stroke-width:30px;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:pointer}
+.structure-svg .macro-node .overview-hover-ring{fill:none;stroke:rgba(117,110,255,.24);stroke-width:1.4px;vector-effect:non-scaling-stroke;pointer-events:none;opacity:0;transition:opacity .12s ease,stroke-width .12s ease,filter .12s ease}
+.structure-svg .macro-node:hover .overview-hover-ring,.structure-svg .macro-node.acquisition-armed .overview-hover-ring,.structure-svg .macro-node .overview-hover-ring[data-state=hover]{opacity:1;stroke-width:16px;filter:drop-shadow(0 0 5px rgba(98,91,255,.16))}
+.structure-svg .macro-node:hover .macro-dot,.structure-svg .macro-node.acquisition-armed .macro-dot{stroke:#625bff;stroke-width:2;filter:drop-shadow(0 0 7px rgba(98,91,255,.2))}
+.structure-svg .macro-node .macro-dot{transition:stroke .14s ease,stroke-width .14s ease,fill .14s ease,filter .14s ease}
+.structure-svg .macro-node .macro-label{fill:#667085;font-size:10px;font-weight:650;letter-spacing:.005em;opacity:.86;transition:fill .14s ease,opacity .14s ease}
+.structure-svg .macro-node:hover .macro-label,.structure-svg .macro-node.acquisition-armed .macro-label,.structure-svg .macro-node.selected .macro-label{fill:#4f47d9;opacity:1}
+.structure-svg .macro-node .macro-count{fill:#98a2b3;font-size:8.5px;font-weight:600}
+.structure-svg .macro-node .macro-git-line{font-size:8.2px;font-weight:700;letter-spacing:.01em;opacity:.92}
+.structure-svg .macro-node.pressing .macro-dot{stroke:#4f47d9;stroke-width:3;filter:drop-shadow(0 0 9px rgba(98,91,255,.32))}
+.structure-svg .macro-node.pressing .overview-hover-ring{opacity:1;stroke-width:20px}
+.structure-svg .macro-node:focus-visible .macro-dot{stroke:#3f72e5;stroke-width:2.5;filter:drop-shadow(0 0 0 3px rgba(63,114,229,.18))}
+.structure-svg .node:not(.macro-node) .bg{transition:stroke .16s ease,stroke-width .16s ease,fill .16s ease,filter .16s ease}
+.structure-svg .node:not(.macro-node):hover .bg{stroke:#aaa5ff;filter:drop-shadow(0 8px 14px rgba(82,73,215,.09))}
+.structure-svg .node:not(.macro-node).selected .bg{fill:#fbfaff;filter:drop-shadow(0 0 6px rgba(98,91,255,.12))}
+.structure-svg .node:not(.macro-node):active .bg{stroke:#625bff;stroke-width:2.4}
+.structure-svg.structure-morph #structureGraph{animation:repoaxisStructureMorph .38s cubic-bezier(.2,.8,.2,1)}
+@keyframes repoaxisStructureMorph{0%{opacity:.12}100%{opacity:1}}
+
+/* Prototype v47 Structure surface: keep the original two-stage material and
+   geometry language while the renderer supplies live Repoaxis nodes. */
+.structure-stage{overflow:hidden;position:absolute;inset:0;background-image:linear-gradient(#f7f8fb 1px,transparent 1px),linear-gradient(90deg,#f7f8fb 1px,transparent 1px);background-size:32px 32px;background-position:-1px -1px}
+.structure-stage:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 48% 45%,rgba(255,255,255,.15),rgba(255,255,255,.96) 78%);pointer-events:none;z-index:1}
+.structure-stage .overview-wrap,.structure-stage .focus-wrap{position:absolute;inset:0;z-index:2;transition:opacity .32s,transform .38s cubic-bezier(.2,.8,.2,1);transform-origin:120px 50%}
+.structure-stage .overview-wrap{opacity:1;transform:scale(1)}
+.structure-stage .focus-wrap{opacity:0;transform:scale(.97);pointer-events:none}
+.structure-stage.focused .overview-wrap{opacity:0;transform:scale(1.12) translateX(-40px);pointer-events:none}
+.structure-stage.focused .focus-wrap{opacity:1;transform:scale(1);pointer-events:auto}
+.structure-stage .overview-wrap svg,.structure-stage .focus-wrap svg{position:absolute;inset:0;width:100%;height:100%;background:transparent;touch-action:none}
+.structure-stage .overview-node,.structure-stage .node-card{cursor:pointer;outline:none}
+.structure-stage .edge{fill:none;stroke:#cbd1dc;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;opacity:.92;vector-effect:non-scaling-stroke;pointer-events:none}
+.structure-stage .edge.soft{stroke:#d9dde6}.structure-stage .edge.hot{stroke:#837cff;stroke-width:1.5;opacity:1}
+.structure-stage .overview-node circle,.structure-stage .overview-node rect{transition:.18s}
+.structure-stage .overview-node:hover .macro-dot{filter:drop-shadow(0 5px 8px rgba(98,91,255,.18));stroke:#625bff}
+.structure-stage .root-halo{fill:rgba(98,91,255,.08);stroke:#b8b4ff;stroke-width:1;animation:repoaxisPrototypePulse 2.2s ease-in-out infinite;pointer-events:none}
+.structure-stage .macro-target,.structure-stage .macro-hit{pointer-events:none;fill:transparent;stroke:transparent}
+.structure-stage .macro-label{font-size:10px;fill:#667085;font-weight:650;dominant-baseline:middle;opacity:.86;pointer-events:none;transition:fill .14s,opacity .14s}
+.structure-stage .overview-wrap .macro-label,.structure-stage .overview-wrap .macro-git-line{display:none}
+.structure-stage .overview-node:hover .macro-label,.structure-stage .overview-node.selected .macro-label{fill:#4f47d9;opacity:1}
+.structure-stage .macro-count{fill:#98a2b3;font-size:8.5px;font-weight:600}
+.structure-stage .node-card .bg{fill:#fff;stroke:#dfe3eb;stroke-width:1.15;filter:drop-shadow(0 4px 9px rgba(17,24,39,.025));vector-effect:non-scaling-stroke}
+.structure-stage .node-card:hover .bg{stroke:#aaa5ff;filter:drop-shadow(0 8px 14px rgba(82,73,215,.09))}
+.structure-stage .node-card.selected .bg{stroke:#625bff;stroke-width:1.8;fill:#fbfaff}
+.structure-stage .node-card .label{font-size:12px;fill:#353c4b;font-weight:570;dominant-baseline:middle;pointer-events:none}
+.structure-stage .folder-glyph{fill:#f5f4ff;stroke:#756eff;stroke-width:1.2}.structure-stage .file-glyph{fill:#fff;stroke:#7b8496;stroke-width:1.1}.structure-stage .fn-glyph{font-size:9px;fill:#5d55ec;font-style:italic;pointer-events:none}.structure-stage .git-badge{pointer-events:none}
+.structure-stage .overview-assist-zone{fill:rgba(98,91,255,.001);stroke:none;pointer-events:all;cursor:pointer}.structure-stage .overview-hit-zone{fill:none;stroke:rgba(98,91,255,.001);stroke-width:30px;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:pointer}.structure-stage .overview-hover-ring{fill:none;stroke:rgba(117,110,255,.24);stroke-width:1.4px;vector-effect:non-scaling-stroke;pointer-events:none;opacity:0;transition:opacity .1s ease,stroke-width .12s ease,filter .12s ease}.structure-stage .overview-node:hover .overview-hover-ring,.structure-stage .overview-node.acquisition-armed .overview-hover-ring,.structure-stage .overview-node .overview-hover-ring[data-state=hover]{opacity:1;stroke-width:18px;filter:drop-shadow(0 0 5px rgba(98,91,255,.13))}.structure-stage .overview-node.pressing .macro-dot{stroke:#4f47d9;stroke-width:3;filter:drop-shadow(0 0 9px rgba(98,91,255,.32))}.structure-stage .overview-node.pressing .overview-hover-ring{opacity:1;stroke-width:20px}
+.structure-stage .macro-git-line{font-size:8.2px;font-weight:700;letter-spacing:.01em;opacity:.92;pointer-events:none}.structure-stage .macro-git-line .git-staged{fill:#625bff}.structure-stage .macro-git-line .git-working{fill:#a66b0b}.structure-stage .macro-git-line .git-conflict{fill:#b4233c}.structure-stage .macro-git-line .git-history{fill:#4b6fae}
+.structure-stage .legend-item{display:inline-flex;align-items:center;gap:6px}.structure-stage .legend-item svg{width:14px;height:14px;display:block}.structure-stage .legend-item .folder-legend{color:#756eff}.structure-stage .legend-item .file-legend{color:#7b8496}.structure-stage .legend-item .symbol-legend{color:#8f88ff}
+.structure-stage .structure-morph #overviewGraph,.structure-stage .structure-morph #focusGraph{animation:repoaxisStructureMorph .38s cubic-bezier(.2,.8,.2,1)}
+.legacy-structure-proxy{display:none!important}
+.structure-host>.view-stage{position:absolute;inset:0;opacity:0;pointer-events:none;transform:translateY(5px);transition:opacity .22s,transform .22s cubic-bezier(.2,.8,.2,1)}
+.structure-host>.view-stage.active{opacity:1;pointer-events:auto;transform:none}
+.structure-host>.view-stage.structure-stage{overflow:hidden;background-position:-1px -1px}
+.structure-stage.canvas-pan{cursor:grab;touch-action:none;user-select:none}.structure-stage.canvas-pan.is-panning{cursor:grabbing}
+.structure-stage .mode-strip{position:absolute;left:18px;top:16px;z-index:8;display:flex;align-items:center;gap:8px}
+.structure-stage .mini-action{height:30px;border:1px solid var(--line2);border-radius:8px;background:#fff;color:#535c6d;padding:0 10px;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.structure-stage .mini-action svg{width:14px;height:14px;stroke-width:1.9;flex:none}.structure-stage .mini-action:hover{border-color:#cbcfe0}.structure-stage .mini-action.accent{color:#4d45db;border-color:#dedcff;background:#f8f7ff}
+.structure-stage .structure-crumbs{height:30px;display:flex;align-items:center;gap:3px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.94);padding:0 5px;max-width:520px;overflow:hidden}
+.structure-stage .structure-crumb{height:22px;padding:0 6px;border-radius:5px;color:#737c8d;font-size:9px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.structure-stage .structure-crumb:hover,.structure-stage .structure-crumb.current{background:#f0efff;color:#4941d5}.structure-stage .crumb-sep{color:#a0a7b3;font-size:11px}
+.structure-stage .git-m>.macro-dot{stroke:#dfa33e!important;fill:#fffaf0!important}.structure-stage .git-a>.macro-dot{stroke:#45ad70!important;fill:#f2fbf5!important}.structure-stage .git-d>.macro-dot{stroke:#df6874!important;fill:#fff4f5!important;stroke-dasharray:3 2}.structure-stage .git-u>.macro-dot{stroke:#8a73ee!important;fill:#f6f3ff!important}.structure-stage .git-r>.macro-dot,.structure-stage .git-t>.macro-dot{stroke:#4b89dc!important;fill:#f2f7fd!important}.structure-stage .git-c>.macro-dot{stroke:#2da4aa!important;fill:#effafa!important}.structure-stage .git-conflict>.macro-dot{stroke:#c93047!important;fill:#fff1f3!important}
+.structure-stage .node-card.git-m .bg{stroke:#dfa33e!important}.structure-stage .node-card.git-a .bg{stroke:#45ad70!important}.structure-stage .node-card.git-d .bg{stroke:#df6874!important;stroke-dasharray:5 4}.structure-stage .node-card.git-u .bg{stroke:#8a73ee!important}.structure-stage .node-card.git-r .bg,.structure-stage .node-card.git-t .bg{stroke:#4b89dc!important}.structure-stage .node-card.git-c .bg{stroke:#2da4aa!important}.structure-stage .node-card.git-conflict .bg{stroke:#c93047!important}
+@keyframes repoaxisPrototypePulse{50%{r:22;opacity:.45}}
+@media(prefers-reduced-motion:reduce){.structure-stage .overview-wrap,.structure-stage .focus-wrap{transition:none}.structure-stage .root-halo{animation:none}.structure-stage .structure-morph #overviewGraph,.structure-stage .structure-morph #focusGraph{animation:none}}
+.stage-toolbar .mode-label{backdrop-filter:blur(12px);box-shadow:0 6px 18px rgba(16,24,40,.045)}
+.stage-toolbar .mini{backdrop-filter:blur(12px);box-shadow:0 6px 18px rgba(16,24,40,.035)}
+.legend{backdrop-filter:blur(10px);box-shadow:0 8px 24px rgba(16,24,40,.045)}
+@media (prefers-reduced-motion:reduce){.structure-svg .edge,.structure-svg .macro-node *,.stage-toolbar .mode-label,.stage-toolbar .mini,.legend{transition:none!important;animation:none!important}.structure-svg.structure-morph #structureGraph{animation:none!important}.view,.content{transition:none!important}}
+.search-summary{min-height:30px;display:flex;align-items:center;padding:0 11px;color:#8a92a1;font-size:9px;letter-spacing:.01em;border-radius:8px;background:#fafbfe}.search-summary b{margin-right:4px;color:#343c4b;font-size:10px}.search-result{transition:background .14s ease,transform .14s ease}.search-result:hover,.search-result.active{background:#f5f5ff;transform:translateX(1px)}
+@media (prefers-reduced-motion:reduce){.search-result{transition:none!important}}

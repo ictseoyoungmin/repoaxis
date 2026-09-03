@@ -52,6 +52,23 @@ test('whole topology macro targets expose visible identity and keyboard affordan
   assert.match(html,/tabindex="0"/);
 });
 
+test('whole topology macro targets expose native hit zones and press feedback',()=>{
+  const {context,nodes}=makeContext();
+  const html=context.structureCard(nodes['folder:src'],100,120,{mode:'overview'});
+  assert.match(html,/class="overview-assist-zone"/);
+  assert.match(html,/class="overview-hit-zone"/);
+  assert.match(html,/class="overview-hover-ring"/);
+  assert.match(source,/function installStructureOverviewHitZones/);
+  assert.match(source,/classList\.add\('pressing'\)/);
+  assert.match(source,/requestAnimationFrame\(installStructureOverviewHitZones\)/);
+});
+
+test('Structure focus transitions expose a bounded visual handoff',()=>{
+  assert.match(source,/function animateStructureTransition/);
+  assert.match(source,/structure-morph/);
+  assert.match(source,/setTimeout\(\(\)=>svg\.classList\.remove\('structure-morph'\),420\)/);
+});
+
 test('whole topology retains an explicit drill-in path after inspection',()=>{
   assert.match(source,/Explore selected/);
   assert.match(source,/ondblclick=\(\)=>enterStructureFocus/);
