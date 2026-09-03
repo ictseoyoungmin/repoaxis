@@ -2,7 +2,9 @@ name: u13-changes-baseline
 on:
   push:
     branches: [feat/u13-changes-surface-hardening]
-    paths: [.github/workflows/u13-changes-baseline.yml]
+    paths:
+      - .github/workflows/u13-changes-baseline.yml
+      - dev/tools/capture-u13-changes-baseline.mjs
 permissions:
   contents: read
 jobs:
