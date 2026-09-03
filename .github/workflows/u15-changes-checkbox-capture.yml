@@ -30,3 +30,4 @@ jobs:
             u15-checkbox-1280.png
             u15-checkbox-metrics.json
             u15-changes-checkbox-parity.html
+# rerun after hover transition settles before assertion
