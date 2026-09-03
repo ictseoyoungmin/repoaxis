@@ -2,7 +2,9 @@ name: u13-changes-final
 on:
   push:
     branches: [feat/u13-changes-surface-hardening]
-    paths: [.github/workflows/u13-changes-final.yml]
+    paths:
+      - .github/workflows/u13-changes-final.yml
+      - dev/tools/capture-u13-changes-final.mjs
 permissions:
   contents: read
 jobs:
