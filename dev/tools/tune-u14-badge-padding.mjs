@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+const v0Path='skills/repoaxis/viewer/viewer-0.js';
+let v0=fs.readFileSync(v0Path,'utf8');
+const old='actualW=Math.max(w,10+label.length*5)';
+const next='actualW=Math.max(w,14+label.length*5)';
+if(!v0.includes(old))throw new Error('U14 badge width source not found');
+v0=v0.replace(old,next);fs.writeFileSync(v0Path,v0);
+const testPath='dev/tests/integration/viewer-graph-framing.test.mjs';
+let test=fs.readFileSync(testPath,'utf8');
+if(!test.includes(old))throw new Error('U14 badge test source not found');
+test=test.replace(old,next);fs.writeFileSync(testPath,test);
