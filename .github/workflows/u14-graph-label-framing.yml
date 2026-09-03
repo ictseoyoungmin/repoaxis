@@ -1,0 +1,25 @@
+name: u14-graph-label-framing
+on:
+  push:
+    branches: [feat/u14-graph-label-framing]
+    paths: [.github/workflows/u14-graph-label-framing.yml]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: node dev/tools/patch-u14-graph-label-framing.mjs
+      - run: npm run check
+      - name: Commit product changes
+        run: |
+          git config user.name 'ictseoyoungmin'
+          git config user.email '90033184+ictseoyoungmin@users.noreply.github.com'
+          git add skills/repoaxis/viewer/viewer-0.js skills/repoaxis/viewer/viewer-2.js dev/tests/integration/viewer-graph-framing.test.mjs
+          git commit -m 'U14: keep Graph labels and impact roots in frame'
+          git push origin HEAD:feat/u14-graph-label-framing
