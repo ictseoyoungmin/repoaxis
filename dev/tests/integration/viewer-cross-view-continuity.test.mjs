@@ -21,7 +21,13 @@ test("cross-view navigation preserves source and projected target context",()=>{
 test("symbol projection is explicit for Dependencies and Graph",()=>{
   assert.ok(viewer.includes("`${n.label} → containing file · becomes root`"));
   assert.ok(viewer.includes("`${n.label} → containing file · file-level graph`"));
-  assert.ok(viewer.includes("`${source.label} → containing file ${target.label} · ${role}`"));
+  assert.ok(viewer.includes("`Containing file · ${source.label} → ${target.label} · ${role}`"));
+});
+
+test("projected selection context stays visible on narrower desktop",()=>{
+  assert.ok(viewer.includes('@media (min-width:1100px) and (max-width:1360px)'));
+  assert.ok(viewer.includes('.selection-context{display:flex!important;width:190px;min-width:190px}'));
+  assert.ok(viewer.includes('.search-trigger{width:210px}'));
 });
 
 test("arrival feedback covers every surface and lasts for the prototype interval",()=>{

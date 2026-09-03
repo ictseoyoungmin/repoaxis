@@ -75,9 +75,11 @@ For local Claude Code development, see `docs/installation.md`. The CLI remains i
 
 ## Human viewer
 
-`repoaxis view` starts a read-only structural viewer on `127.0.0.1`. It shows the canonical folder/file/class/function tree, distinct working/staged Git badges, a complete Changes surface including deleted paths, last-file commit context, stored annotations, repository-local imports and reverse imports, and a bounded dependency graph. The browser polls the local viewer API while open, and the API reuses Repoaxis freshness checks so the view follows the working tree without an always-on daemon.
+`repoaxis view` starts a read-only structural viewer on `127.0.0.1`. Structure begins with a macro repository topology and drills into bounded labeled subtrees; Dependencies keeps one explicit root with Back/Initial-root/root-trail navigation; Changes supports direct multi-file selection and combined impact analysis; and Graph keeps dense imports readable through bounded/focused projections, spacing-first geometry, directional routing, and impact framing. The Inspector stays attached to the current analysis target across surfaces.
 
-`repoaxis snapshot` exports that same product shell as a self-contained frozen HTML file. The export inlines the shipped viewer assets and the current read-only viewer responses rather than maintaining a separate snapshot UI or repository model. Snapshot mode is intentionally frozen: it preserves the captured Structure, Dependencies, Changes, Graph, Inspector, Git overlays, and navigation but never claims to remain current after capture.
+Cross-view navigation preserves why a target moved. A class or function sent to Dependencies or Graph is explicitly projected to its containing file, the original symbol remains visible in the selection context, and the destination receives a short arrival highlight so it can be reacquired immediately. Working/staged Git state, deleted paths, last-file commit context, annotations, canonical imports, search, and viewport-aware pan/zoom continue to use the same live repository index. The browser polls the local viewer API while open so the view follows the working tree without an always-on daemon.
+
+`repoaxis snapshot` exports that same product shell as a self-contained frozen HTML file. The export inlines the shipped viewer assets and the current read-only viewer responses rather than maintaining a separate snapshot UI or repository model. Snapshot mode is intentionally frozen: it preserves the captured Structure, Dependencies, Changes, Graph, Inspector, Git overlays, cross-view continuity, and navigation but never claims to remain current after capture.
 
 ## Distribution surfaces
 

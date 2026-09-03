@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.15.0 — 2026-09-03
+
+- Hardened the human viewer from the initial 0.14 product shell into a more continuous repository-analysis surface while preserving Git plus the working tree as authority and `.repoaxis.json` as the rebuildable canonical projection.
+- Reworked Structure into progressive disclosure: the whole-repository view stays macro and directly inspectable, focused exploration opens bounded labeled subtrees with breadcrumbs/hidden-descendant counts, and folder/root Git state is aggregated without inventing one file status.
+- Restored explicit dependency investigation continuity with selected-file promotion, Back, Initial root, and root-trail navigation while preserving inspect-without-silent-reroot behavior.
+- Rebuilt Graph exploration around readable world-scale geometry, bounded/focused/impact projections, directional hover context, side-aware orthogonal routing, obstacle avoidance, shared-port spreading, and viewport reconciliation instead of shrinking dense repositories into unreadable overviews.
+- Hardened Changes direct manipulation with explicit multi-file selection, active quick presets, master checked/indeterminate state, canonical SVG checkbox chrome, mixed staged+working badge containment, and combined impact/Graph entry points.
+- Added cross-view selection continuity: symbol selections projected to file-level Dependencies/Graph retain their source context, keep the Inspector open, explain the containing-file projection, and visibly pulse the destination for 1.4 seconds so users can reacquire the analysis target after a surface change.
+- Completed keyboard repository search with Arrow/Enter navigation and layered Escape behavior, and improved Inspector information hierarchy so current state and indexed facts lead while durable identity/provenance remain available.
+- Reconciled Structure, Dependencies, and Graph cameras with the actual usable viewport, including Inspector-open and narrower-window states, and added repeated real-browser visual QA for major interaction slices.
+- Kept frozen `repoaxis snapshot` parity with the live viewer by packaging the added cross-view runtime layer into both the loopback asset server and standalone snapshot inliner.
+
 ## 0.14.0 — 2026-09-02
 
 - Added `repoaxis snapshot [--root PATH] [--output FILE]` to export the canonical Repoaxis product viewer as one self-contained frozen HTML artifact.
