@@ -26,3 +26,4 @@ jobs:
             u14-impact-framing-1280.png
             u14-framing-metrics.json
             u14-graph-label-framing.html
+# final run requires visible horizontal padding inside every Git badge
