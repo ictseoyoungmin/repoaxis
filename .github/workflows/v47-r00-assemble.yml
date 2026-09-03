@@ -1,7 +1,8 @@
 name: v47-r00-assemble
 on:
   push:
-    branches: [feat/v47-r00-canonical-viewer-reset]
+    branches:
+      - feat/v47-r00-canonical-viewer-reset
 permissions:
   contents: write
 jobs:
@@ -16,188 +17,15 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Assemble and verify canonical v47
-        shell: bash
-        run: |
-          set -euo pipefail
-          cat .v47-r00/chunk-02.b64 .v47-r00/gz-01.b64 .v47-r00/gz-02.b64 .v47-r00/gz-03.b64 .v47-r00/gz-04.b64 | base64 -d | gzip -d > /tmp/repoaxis-v47.html
-          echo '5cbb82c3014d32e88a64860cc55fa6213813b353a98b6b3b151c7eef745a960d  /tmp/repoaxis-v47.html' | sha256sum -c -
-          cp /tmp/repoaxis-v47.html skills/repoaxis/viewer/repoaxis.html
-          rm -f skills/repoaxis/viewer/viewer-*.js skills/repoaxis/viewer/viewer-*.css
-      - name: Collapse server and snapshot to single-file viewer contract
-        shell: python
-        run: |
-          from pathlib import Path
-          import re
-
-          server = Path('skills/repoaxis/lib/view-server.mjs')
-          s = server.read_text()
-          s = re.sub(r'const VIEWER_ASSETS = new Map\(\[.*?\]\);\n', '', s, flags=re.S)
-          s = re.sub(r'\n    if \(VIEWER_ASSETS\.has\(url\.pathname\)\) \{.*?\n    \}', '', s, count=1, flags=re.S)
-          server.write_text(s)
-
-          snapshot = Path('skills/repoaxis/lib/view-snapshot.mjs')
-          snapshot.write_text(r'''import fs from "node:fs";
-import path from "node:path";
-import process from "node:process";
-import { startViewer } from "./view-server.mjs";
-
-function snapshotBootstrap(payload) {
-  const serialized = JSON.stringify(payload).replace(/</g, "\\u003c");
-  return `<script data-repoaxis-snapshot-bootstrap>\nwindow.__REPOAXIS_SNAPSHOT__=${serialized};\nwindow.fetch=async function(input){\n  const raw=typeof input==='string'?input:(input&&input.url)||'';\n  let pathname='';\n  try{pathname=new URL(raw,'http://repoaxis.snapshot').pathname}catch{}\n  const response=window.__REPOAXIS_SNAPSHOT__.responses[pathname];\n  if(!response)throw new Error('Frozen Repoaxis snapshot has no resource for '+(pathname||raw));\n  return new Response(JSON.stringify(response),{status:200,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});\n};\n</script>`;
-}
-
-async function fetchText(base, pathname) {
-  const response = await fetch(new URL(pathname, base));
-  if (!response.ok) throw new Error(`${pathname} returned HTTP ${response.status}`);
-  return response.text();
-}
-
-async function fetchJson(base, pathname) {
-  const response = await fetch(new URL(pathname, base));
-  const value = await response.json();
-  if (!response.ok || value?.ok === false) throw new Error(value?.error || `${pathname} returned HTTP ${response.status}`);
-  return value;
-}
-
-export async function writeViewerSnapshot({ root = process.cwd(), output = null } = {}) {
-  const viewer = await startViewer({ root, port: 0, open: false });
-  try {
-    const [shell, indexResponse, metaResponse, historyResponse] = await Promise.all([
-      fetchText(viewer.url, "/"),
-      fetchJson(viewer.url, "/api/index"),
-      fetchJson(viewer.url, "/api/meta"),
-      fetchJson(viewer.url, "/api/history"),
-    ]);
-    const capturedAt = new Date().toISOString();
-    const payload = {
-      format: "repoaxis-viewer-snapshot-v1",
-      captured_at: capturedAt,
-      responses: {
-        "/api/index": { ...indexResponse, refreshed: false, reason: "snapshot" },
-        "/api/meta": { ...metaResponse, source_host_label: metaResponse.host_label, host_label: "Snapshot" },
-        "/api/history": historyResponse,
-      },
-    };
-    let html = shell;
-    html = html.replace(/<title>[^<]*<\/title>/, "<title>Repoaxis — Frozen Snapshot</title>");
-    html = html.replace("</head>", `${snapshotBootstrap(payload)}\n</head>`);
-    html = html.replace("<body>", `<body data-repoaxis-mode="snapshot" data-repoaxis-captured-at="${capturedAt}">`);
-    if (/\b(?:src|href)="\/viewer-/.test(html)) throw new Error("snapshot contains external viewer assets");
-    const outputFile = path.resolve(output ?? path.join(viewer.root, "repoaxis-snapshot.html"));
-    fs.mkdirSync(path.dirname(outputFile), { recursive: true });
-    fs.writeFileSync(outputFile, html, "utf8");
-    return {
-      ok: true,
-      output: outputFile,
-      root: viewer.root,
-      captured_at: capturedAt,
-      repository: metaResponse.display_name,
-      head_sha: indexResponse.index?.repository?.head_sha ?? null,
-      bytes: Buffer.byteLength(html),
-    };
-  } finally {
-    await new Promise((resolve) => viewer.server.close(resolve));
-  }
-}
-''')
-      - name: Replace split-viewer implementation tests with canonical-shell contract
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -f dev/tests/integration/viewer-*.test.mjs
-          cat > dev/tests/integration/viewer.test.mjs <<'EOF'
-          import assert from "node:assert/strict";
-          import { execFileSync } from "node:child_process";
-          import crypto from "node:crypto";
-          import fs from "node:fs";
-          import os from "node:os";
-          import path from "node:path";
-          import { fileURLToPath } from "node:url";
-          import test from "node:test";
-          import { startViewer } from "../../../skills/repoaxis/lib/view-server.mjs";
-
-          const VIEWER_DIR=fileURLToPath(new URL("../../../skills/repoaxis/viewer/",import.meta.url));
-          const VIEWER_HTML=path.join(VIEWER_DIR,"repoaxis.html");
-          const V47_SHA="5cbb82c3014d32e88a64860cc55fa6213813b353a98b6b3b151c7eef745a960d";
-          function git(root,...args){return execFileSync("git",["-C",root,...args],{encoding:"utf8",stdio:["ignore","pipe","pipe"]}).trim()}
-          function createRepo(){const root=fs.mkdtempSync(path.join(os.tmpdir(),"repoaxis-viewer-"));fs.mkdirSync(path.join(root,"src"),{recursive:true});fs.writeFileSync(path.join(root,"src","util.js"),"export const value = 1;\n");fs.writeFileSync(path.join(root,"src","main.js"),"import { value } from './util.js';\nexport function main(){ return value; }\n");fs.writeFileSync(path.join(root,"src","legacy.js"),"export const legacy = true;\n");git(root,"init","-q","-b","main");git(root,"config","user.name","Repoaxis Viewer Test");git(root,"config","user.email","repoaxis@example.invalid");git(root,"remote","add","origin","git@github.com:example/repoaxis-viewer-fixture.git");git(root,"add",".");git(root,"commit","-qm","fixture");fs.writeFileSync(path.join(root,"src","util.js"),"export const value = 2;\n");fs.rmSync(path.join(root,"src","legacy.js"));git(root,"add","-A");git(root,"commit","-qm","update util and remove legacy");return root}
-
-          test("viewer directory is exactly the canonical single-file v47 shell",()=>{
-            assert.deepEqual(fs.readdirSync(VIEWER_DIR).sort(),["repoaxis.html"]);
-            const html=fs.readFileSync(VIEWER_HTML,"utf8"),sha=crypto.createHash("sha256").update(html).digest("hex");
-            assert.equal(sha,V47_SHA);
-            assert.match(html,/Repository Intelligence Prototype v47/);
-            for(const id of ["structureStage","dependenciesStage","changesStage","graphStage","drawer"])assert.match(html,new RegExp(`id="${id}"`));
-            for(const fn of ["renderOverview","renderDependencies","renderChanges","renderGraph","navigateSelectedTo","openChangeSetGraphV18","impactPathsV21"])assert.match(html,new RegExp(`function ${fn}|${fn}=function`));
-            assert.doesNotMatch(html,/(?:src|href)="\/viewer-/);
-            for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))assert.doesNotThrow(()=>new Function(m[1]));
-          });
-
-          test("viewer server serves the canonical shell plus live read-only APIs only",async()=>{
-            const root=createRepo(),viewer=await startViewer({root,port:0,open:false});
-            try{
-              assert.equal(viewer.host,"127.0.0.1");
-              const page=await fetch(viewer.url);assert.equal(page.status,200);const html=await page.text();assert.match(html,/Repository Intelligence Prototype v47/);
-              for(const asset of ["/viewer-base.css","/viewer-surfaces.css","/viewer-0.js","/viewer-5.js"])assert.equal((await fetch(new URL(asset,viewer.url))).status,404);
-              const first=await fetch(new URL("/api/index",viewer.url)).then(r=>r.json());assert.equal(first.ok,true);assert.equal(first.index.generated.edges.some(e=>e.type==="imports"),true);
-              const meta=await fetch(new URL("/api/meta",viewer.url)).then(r=>r.json());assert.equal(meta.display_name,"example/repoaxis-viewer-fixture");assert.equal(meta.host_label,"GitHub");
-              const history=await fetch(new URL("/api/history",viewer.url)).then(r=>r.json());assert.equal(history.commit.subject,"update util and remove legacy");assert.equal(history.changes.some(c=>c.path==="src/legacy.js"&&c.status==="D"),true);
-              const health=await fetch(new URL("/api/health",viewer.url)).then(r=>r.json());assert.deepEqual(health,{ok:true,repository:".",host:"127.0.0.1"});
-              fs.writeFileSync(path.join(root,"src","util.js"),"export const value = 3;\n");const second=await fetch(new URL("/api/index",viewer.url)).then(r=>r.json());assert.equal(second.ok,true);assert.equal(second.index.generated.nodes["file:src/util.js"].git.working,"modified");
-              for(const endpoint of ["/api/index","/api/meta","/api/history"])assert.equal((await fetch(new URL(endpoint,viewer.url),{method:"POST"})).status,405);
-            }finally{await new Promise(resolve=>viewer.server.close(resolve))}
-          });
-          EOF
-          sed -i 's/^          //' dev/tests/integration/viewer.test.mjs
-
-          cat > dev/tests/integration/viewer-snapshot.test.mjs <<'EOF'
-          import assert from "node:assert/strict";
-          import { execFileSync } from "node:child_process";
-          import fs from "node:fs";
-          import os from "node:os";
-          import path from "node:path";
-          import { fileURLToPath } from "node:url";
-          import test from "node:test";
-          import { writeViewerSnapshot } from "../../../skills/repoaxis/lib/view-snapshot.mjs";
-          const BIN=fileURLToPath(new URL("../../../bin/repoaxis",import.meta.url));
-          function git(root,...args){return execFileSync("git",["-C",root,...args],{encoding:"utf8",stdio:["ignore","pipe","pipe"]}).trim()}
-          function createRepo(){const root=fs.mkdtempSync(path.join(os.tmpdir(),"repoaxis-snapshot-"));fs.mkdirSync(path.join(root,"src"),{recursive:true});fs.writeFileSync(path.join(root,"src","util.js"),"export const value = 1;\n");fs.writeFileSync(path.join(root,"src","main.js"),"import { value } from './util.js';\nexport const result = value;\n");git(root,"init","-q","-b","main");git(root,"config","user.name","Repoaxis Snapshot Test");git(root,"config","user.email","repoaxis@example.invalid");git(root,"remote","add","origin","git@github.com:example/repoaxis-snapshot-fixture.git");git(root,"add",".");git(root,"commit","-qm","snapshot fixture");fs.writeFileSync(path.join(root,"src","util.js"),"export const value = 2;\n");return root}
-          function embeddedPayload(html){const marker="window.__REPOAXIS_SNAPSHOT__=",start=html.indexOf(marker);assert.notEqual(start,-1);const valueStart=start+marker.length,end=html.indexOf(";\nwindow.fetch=async function",valueStart);assert.notEqual(end,-1);return JSON.parse(html.slice(valueStart,end))}
-          test("snapshot freezes live API payload into the same single-file v47 shell",async()=>{const root=createRepo(),output=path.join(root,"artifacts","viewer.html"),result=await writeViewerSnapshot({root,output});assert.equal(result.ok,true);const html=fs.readFileSync(output,"utf8");assert.match(html,/<title>Repoaxis — Frozen Snapshot<\/title>/);assert.match(html,/data-repoaxis-mode="snapshot"/);assert.match(html,/window\.__REPOAXIS_SNAPSHOT__/);assert.doesNotMatch(html,/(?:src|href)="\/viewer-/);const payload=embeddedPayload(html);assert.equal(payload.format,"repoaxis-viewer-snapshot-v1");assert.equal(payload.responses["/api/meta"].host_label,"Snapshot");assert.equal(payload.responses["/api/history"].commit.subject,"snapshot fixture");assert.equal(payload.responses["/api/index"].reason,"snapshot");assert.equal(payload.responses["/api/index"].refreshed,false)});
-          test("repoaxis snapshot remains a first-class CLI command",()=>{const help=execFileSync(process.execPath,[BIN,"help"],{encoding:"utf8"});assert.match(help,/repoaxis snapshot \[--root PATH\] \[--output FILE\]/);const root=createRepo(),output=path.join(root,"snapshot.html"),result=JSON.parse(execFileSync(process.execPath,[BIN,"snapshot","--root",root,"--output",output],{encoding:"utf8"}).trim());assert.equal(result.ok,true);assert.match(fs.readFileSync(output,"utf8"),/window\.__REPOAXIS_SNAPSHOT__/)});
-          EOF
-          sed -i 's/^          //' dev/tests/integration/viewer-snapshot.test.mjs
-      - name: Record reset boundary and remove staging
-        shell: bash
-        run: |
-          cat > dev/visuals/v47-r00-canonical-viewer-reset.snapshot.md <<'EOF'
-          # V47-R00 — Canonical viewer reset
-
-          Date: 2026-09-03
-
-          - UI/UX authority is the supplied `repoaxis_saas_prototype_v47(2).html` as one canonical source file.
-          - Canonical SHA-256: `5cbb82c3014d32e88a64860cc55fa6213813b353a98b6b3b151c7eef745a960d`.
-          - `skills/repoaxis/viewer/` contains only `repoaxis.html`; the split `viewer-*.js` / `viewer-*.css` reconstruction has been removed.
-          - R00 intentionally does not wire live repository data into the prototype yet. Its fixture arrays and existing v47 interaction state machine remain byte-identical.
-          - The loopback `/api/index`, `/api/meta`, `/api/history`, and `/api/health` backend contracts remain available for R01+ wiring.
-          - `repoaxis snapshot` now freezes those API payloads into the already self-contained canonical HTML rather than inlining a second viewer asset graph.
-          - Existing viewer tests that fixed the abandoned split implementation were removed and replaced with the single-file authority/server/snapshot boundary tests.
-
-          No index schema, Git semantics, query semantics, release workflow, or canonical repository analysis logic changed in R00.
-          EOF
-          sed -i 's/^          //' dev/visuals/v47-r00-canonical-viewer-reset.snapshot.md
-          rm -rf .v47-r00
-          rm -f .github/workflows/v47-r00-assemble.yml
+      - name: Apply canonical reset
+        run: python .v47-r00/apply.py
       - name: Validate reset
         run: |
           npm ci
           npm run check
           npm run release:dry-run
       - name: Commit canonical reset
-        shell: bash
         run: |
-          set -euo pipefail
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
