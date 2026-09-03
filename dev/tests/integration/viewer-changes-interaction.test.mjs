@@ -24,3 +24,10 @@ test("Changes quick presets expose the active set",()=>{
   assert.ok(viewer.includes('class="set-count"'));
   assert.match(css,/\.set-toolbar \.quick:hover,\.set-toolbar \.quick\.active/);
 });
+
+test("Changes binds every repeated action with querySelectorAll",()=>{
+  assert.ok(viewer.includes("$$('[data-check]').forEach"));
+  assert.ok(viewer.includes("$$('[data-impact]').forEach"));
+  assert.ok(viewer.includes("$$('[data-graph]').forEach"));
+  assert.ok(viewer.includes("$$('[data-quick]').forEach"));
+});
