@@ -1,1 +1,0 @@
-temporary trigger for U17.1 cross-view visual QA
