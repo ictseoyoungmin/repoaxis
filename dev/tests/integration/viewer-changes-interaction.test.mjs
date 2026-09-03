@@ -31,3 +31,9 @@ test("Changes binds every repeated action with querySelectorAll",()=>{
   assert.ok(viewer.includes("$$('[data-graph]').forEach"));
   assert.ok(viewer.includes("$$('[data-quick]').forEach"));
 });
+
+test("mixed staged plus working status gets explicit horizontal breathing room",()=>{
+  assert.ok(viewer.includes("mixedStyle=c.status==='mixed'?'min-width:30px;width:auto;padding:0 5px"));
+  assert.ok(viewer.includes("statusLabel(c.status)"));
+  assert.match(css,/\.status-box\{width:24px;height:24px/);
+});
