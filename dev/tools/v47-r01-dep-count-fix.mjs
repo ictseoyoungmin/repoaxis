@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+const p='skills/repoaxis/viewer/repoaxis.html';
+let s=fs.readFileSync(p,'utf8');
+const from="c.textContent=$$('#dependenciesCanvas .dt-node').length";
+const to="c.textContent=document.querySelectorAll('#dependenciesCanvas .dt-node').length";
+const count=s.split(from).length-1;
+if(count!==1)throw new Error(`expected one dependency count target, got ${count}`);
+s=s.replace(from,to);
+fs.writeFileSync(p,s);
+console.log('fixed dependency count query');
