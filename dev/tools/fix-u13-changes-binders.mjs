@@ -12,5 +12,5 @@ fs.writeFileSync(viewerPath,viewer);
 
 const testPath='dev/tests/integration/viewer-changes-interaction.test.mjs';
 let test=fs.readFileSync(testPath,'utf8');
-test += `\ntest("Changes binds every repeated action with querySelectorAll",()=>{\n  for(const selector of ["[data-check]","[data-impact]","[data-graph]","[data-quick]"]) {\n    assert.ok(viewer.includes(\`$$('\\${selector}').forEach\`), \`missing multi-element binder for \\${selector}\`);\n  }\n});\n`;
+test += `\ntest("Changes binds every repeated action with querySelectorAll",()=>{\n  assert.ok(viewer.includes("$$('[data-check]').forEach"));\n  assert.ok(viewer.includes("$$('[data-impact]').forEach"));\n  assert.ok(viewer.includes("$$('[data-graph]').forEach"));\n  assert.ok(viewer.includes("$$('[data-quick]').forEach"));\n});\n`;
 fs.writeFileSync(testPath,test);
