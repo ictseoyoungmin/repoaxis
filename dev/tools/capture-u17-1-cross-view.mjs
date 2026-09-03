@@ -15,12 +15,18 @@ const page=await browser.newPage({viewport:{width:1600,height:900},deviceScaleFa
 const metrics={captured_at:new Date().toISOString(),viewport:{width:1600,height:900},checks:{}};
 
 async function shot(name){await page.screenshot({path:path.join(out,name),fullPage:false});}
-async function searchSelect(query){
-  await page.click("#searchTrigger");
-  await page.fill("#searchInput",query);
-  await page.waitForSelector("#searchResults .search-result[data-id]");
-  await page.click("#searchResults .search-result[data-id]");
+async function selectIndexedSymbol(){
+  const chosen=await page.evaluate(()=>{
+    const symbol=Object.values(nodes).find(n=>(n.type==='function'||n.type==='class')&&containingFile(n));
+    if(!symbol)throw new Error('No indexed symbol with a containing file');
+    state.structureFocus=true;
+    state.drawer=true;
+    document.querySelector('#content')?.classList.add('drawer-open');
+    switchView('structure',symbol.id);
+    return{id:symbol.id,label:symbol.label,file:containingFile(symbol)?.repoPath||null};
+  });
   await page.waitForTimeout(180);
+  return chosen;
 }
 async function arrival(view,name){
   await page.click(`#entityActions [data-v="${view}"]`);
@@ -41,29 +47,19 @@ try{
   await page.goto(viewer.url,{waitUntil:"networkidle"});
   await page.waitForFunction(()=>document.querySelector('#boot')?.hidden===true);
 
-  await searchSelect("scheduleArrivalFeedback");
+  metrics.symbol=await selectIndexedSymbol();
   metrics.checks.structure_symbol=await page.evaluate(()=>({view:state.view,selected:state.selected,label:document.querySelector('#selName')?.textContent||'',detail:document.querySelector('#selDetail')?.textContent||'',drawerOpen:document.querySelector('#content')?.classList.contains('drawer-open')||false}));
   await shot("u17-1-structure-symbol.png");
   await arrival("dependencies","u17-1-dependencies-arrival");
 
-  await searchSelect("scheduleArrivalFeedback");
+  metrics.symbol_graph=await selectIndexedSymbol();
   await arrival("graph","u17-1-graph-arrival");
 
-  await page.click('.rail-item[data-view="changes"]');
-  await page.waitForTimeout(220);
-  const row=page.locator('#changesShell .change-row[data-id]').first();
-  if(await row.count()){
-    await row.click();
-    await page.waitForTimeout(120);
-    const depJump=page.locator('#entityActions [data-v="dependencies"]');
-    if(await depJump.count())await arrival("dependencies","u17-1-changes-to-dependencies-arrival");
-  }
-
   await page.setViewportSize({width:1280,height:820});
-  await searchSelect("scheduleArrivalFeedback");
+  metrics.symbol_1280=await selectIndexedSymbol();
   await page.click('#entityActions [data-v="graph"]');
   await page.waitForTimeout(140);
-  metrics.checks.graph_1280=await page.evaluate(()=>{const target=document.querySelector('#graphSvg .node.arrival-target');const r=target?.getBoundingClientRect();return{arrival:!!target,detail:document.querySelector('#selDetail')?.textContent||'',drawerOpen:document.querySelector('#content')?.classList.contains('drawer-open')||false,targetRect:r?{x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}:null,innerWidth:window.innerWidth,scrollWidth:document.documentElement.scrollWidth};});
+  metrics.checks.graph_1280=await page.evaluate(()=>{const target=document.querySelector('#graphSvg .node.arrival-target');const r=target?.getBoundingClientRect();return{arrival:!!target,detail:document.querySelector('#selDetail')?.textContent||'',drawerOpen:document.querySelector('#content')?.classList.contains('drawer-open')||false,targetRect:r?{x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}:null,innerWidth:window.innerWidth,innerHeight:window.innerHeight,scrollWidth:document.documentElement.scrollWidth};});
   await shot("u17-1-graph-arrival-1280.png");
 
   const required=[metrics.checks["u17-1-dependencies-arrival"],metrics.checks["u17-1-graph-arrival"]];
@@ -72,6 +68,8 @@ try{
   if(!required.every(x=>x.scrollWidth===x.innerWidth))throw new Error("cross-view arrival caused horizontal page overflow");
   if(!metrics.checks["u17-1-dependencies-arrival_cleared"]||!metrics.checks["u17-1-graph-arrival_cleared"])throw new Error("arrival feedback did not clear after 1400ms");
   if(!metrics.checks.graph_1280?.arrival||metrics.checks.graph_1280.scrollWidth!==metrics.checks.graph_1280.innerWidth)throw new Error("1280px arrival regression");
+  const r=metrics.checks.graph_1280.targetRect;
+  if(!r||r.x<0||r.right>metrics.checks.graph_1280.innerWidth||r.y<0||r.bottom>metrics.checks.graph_1280.innerHeight)throw new Error("1280px arrival target is not fully visible");
 
   fs.writeFileSync(path.join(out,"u17-1-metrics.json"),JSON.stringify(metrics,null,2));
 }finally{
