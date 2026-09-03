@@ -43,6 +43,8 @@ function assertGeometry(g,label){
   invariant(mixed,`${label}: missing S+W badge`);
   const overflowing=g.badges.filter(b=>b.text.left<b.rect.left-.6||b.text.right>b.rect.right+.6||b.text.top<b.rect.top-.6||b.text.bottom>b.rect.bottom+.6);
   invariant(overflowing.length===0,`${label}: badge text overflow ${JSON.stringify(overflowing)}`);
+  const tight=g.badges.filter(b=>(b.text.left-b.rect.left)<1.5||(b.rect.right-b.text.right)<1.5);
+  invariant(tight.length===0,`${label}: badge horizontal padding too tight ${JSON.stringify(tight)}`);
 }
 const wide=await geometry();assertGeometry(wide,'1600');
 await page.screenshot({path:'u14-impact-framing-1600.png',fullPage:true});
