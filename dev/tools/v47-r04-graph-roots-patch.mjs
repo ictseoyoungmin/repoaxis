@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+const p='skills/repoaxis/viewer/repoaxis.html';
+let s=fs.readFileSync(p,'utf8');
+const old="const connected=new Set(importEdges.flat()),fs=files().filter(f=>connected.has(f.id)).sort((a,b)=>a.path.localeCompare(b.path)),groups=new Map();";
+const next="const connected=new Set(importEdges.flat()),changed=new Set(changes.filter(c=>c.id!=='ghost'&&byId[c.id]?.type==='file').map(c=>c.id)),fs=files().filter(f=>connected.has(f.id)||changed.has(f.id)).sort((a,b)=>a.path.localeCompare(b.path)),groups=new Map();";
+if(!s.includes(old))throw new Error('R04 graph input seam missing');
+if(s.includes('changed=new Set(changes.filter'))throw new Error('R04 already applied');
+s=s.replace(old,next);
+fs.writeFileSync(p,s);
+console.log('applied R04 graph input union: import-connected + current changed files');
