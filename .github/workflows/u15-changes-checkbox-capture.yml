@@ -1,0 +1,32 @@
+name: u15-changes-checkbox-capture
+on:
+  push:
+    branches: [feat/u15-changes-checkbox-parity]
+    paths: [.github/workflows/u15-changes-checkbox-capture.yml]
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run check
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: node dev/tools/capture-u15-changes-checkbox-parity.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: u15-changes-checkbox-parity
+          path: |
+            u15-checkbox-off.png
+            u15-checkbox-hover.png
+            u15-checkbox-partial.png
+            u15-checkbox-pressed.png
+            u15-checkbox-all-checked.png
+            u15-checkbox-1280.png
+            u15-checkbox-metrics.json
+            u15-changes-checkbox-parity.html
