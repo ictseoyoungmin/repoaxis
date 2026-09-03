@@ -10,9 +10,9 @@ const viewer=fs.readFileSync(VIEWER2,"utf8"),css=fs.readFileSync(CSS,"utf8");
 test("Changes exposes direct change-set selection state",()=>{
   assert.ok(viewer.includes('id="selectAllChanges"'));
   assert.ok(viewer.includes('change-set-picked'));
-  assert.ok(viewer.includes("somePicked?'partial'"));
+  assert.ok(viewer.includes("somePicked?'indeterminate'"));
   assert.ok(viewer.includes('state.changeSet=new Set(allPicked?[]:currentIds)'));
-  assert.match(css,/\.check\.partial/);
+  assert.match(css,/\.change-select\.indeterminate/);
   assert.match(css,/\.change-row\.change-set-picked/);
 });
 
