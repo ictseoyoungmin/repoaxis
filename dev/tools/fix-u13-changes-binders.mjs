@@ -6,7 +6,7 @@ for(const selector of ['[data-check]','[data-impact]','[data-graph]','[data-quic
   const wrong=`$('${selector}').forEach`;
   const right=`$$('${selector}').forEach`;
   if(!viewer.includes(wrong))throw new Error(`Missing collapsed binder: ${selector}`);
-  viewer=viewer.replace(wrong,right);
+  viewer=viewer.replace(wrong,()=>right);
 }
 fs.writeFileSync(viewerPath,viewer);
 
