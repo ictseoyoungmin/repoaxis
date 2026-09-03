@@ -37,13 +37,27 @@ No endpoint serves source-file contents and no endpoint mutates the repository o
 
 ## Product surfaces
 
-- **Structure** — adaptive containment topology for folders, files, classes, and functions. The whole-repository overview is intentionally label-light; focus mode exposes labels, breadcrumbs, source symbols, Git overlay badges, search, pan/zoom, and the inspector.
-- **Dependencies** — one explicit root file projected as a bounded dependency tree. `Imported by` answers impact direction; `Imports` answers requirements direction. Repeated routes are collapsed into `already shown` references and cycles are marked instead of recursively duplicating nodes.
-- **Changes** — the complete `generated.git_changes` projection. Working-tree, staged, mixed, untracked, conflicted, renamed/copied, and deleted paths remain distinct. Deleted paths remain visible without inventing a current filesystem node. Current changed files can be selected as a set and analyzed together.
-- **Graph** — the canonical N:N file import surface. Folder scopes supply containment context only. Whole-repository layout is adaptive to the current file set; neighborhood focus remains bounded. Change-set impact mode highlights the upstream union and can explain an affected file with a concrete canonical propagation path to a selected change root.
-- **Inspector** — deterministic node identity, real indexed source range/signature, exact file Git state, exact last-file commit context, relation counts, durable annotation text, and links derived from the actual Git remote when available.
+- **Structure** — progressive containment exploration for folders, files, classes, and functions. The whole-repository projection stays intentionally macro and label-light so selecting a node can inspect it without forcing a drill-in. Focus mode opens a bounded two-level subtree with labels, breadcrumbs, hidden-descendant counts, source symbols, Git overlay badges, search, and pan/zoom. Root/folder Git marks summarize changed descendants rather than pretending that a folder has one file status.
+- **Dependencies** — one explicit file root projected as a bounded dependency tree. `Imported by` answers impact direction and `Imports` answers requirements direction. Inspecting another node does not silently change the root; `Use selected as root` promotes the current file/symbol explicitly, while `Back`, `Initial root`, and the root trail preserve investigation history. Repeated routes are collapsed into `already shown` references and cycles are marked instead of recursively duplicating nodes.
+- **Changes** — the complete `generated.git_changes` projection. Working-tree, staged, mixed, untracked, conflicted, renamed/copied, and deleted paths remain distinct. Deleted paths remain visible without inventing a current filesystem node. Current changed files expose direct checkbox selection, a checked/indeterminate master selector, Staged/Working/All presets, and combined `Analyze impact` / `View in Graph` actions. Mixed staged-plus-working files remain one explicit `S+W` presentation backed by the independent serialized Git lanes.
+- **Graph** — the canonical N:N file import surface. Folder scopes supply containment context only. Whole-repository rendering uses spacing-first world geometry and a readable camera instead of shrinking dense repositories to fit. Neighborhood focus remains bounded; change-set impact mode shows the upstream union and can explain an affected file with a concrete canonical propagation path. Routes use directional, side-aware orthogonal geometry with shared-port spreading and obstacle avoidance. Entering an impact projection frames all projected roots rather than centering only one selected root.
+- **Inspector** — deterministic node identity, real indexed source range/signature, exact file Git state, exact last-file commit context, relation counts, durable annotation text, and links derived from the actual Git remote when available. Current state and indexed facts lead the Overview; durable identity remains available in Metrics and exact source metadata remains available in Source.
 
-The same selection is projected across Structure, Dependencies, Changes, and Graph rather than silently selecting unrelated fixture nodes.
+## Cross-view continuity
+
+Structure, Dependencies, Changes, and Graph are projections of one repository selection, not four unrelated navigation states.
+
+When a class or function moves from Structure into a file-level surface such as Dependencies or Graph, Repoaxis explicitly projects the symbol to its containing file. The original symbol remains recorded as the source of the transition, the Inspector stays open, and the global selection context explains the mapping (for example, `symbol → containing file · graph projection`). The destination node receives a short 1.4-second arrival highlight so the user can immediately reacquire the object after the surface changes.
+
+Moving to Structure restores exact containment context. An ordinary node selection clears stale cross-view projection context so previous navigation explanations do not leak into a new investigation. Changes only accepts a cross-view jump when the projected file is actually present in the active changed-file projection.
+
+## Search and transient UI
+
+Repository search is available from the header and with `Ctrl/Cmd+K`. Arrow Up/Down moves one active search cursor, Enter activates it, and activation lands in Structure with the Inspector visible. Escape unwinds transient UI in order — search, filters, dependency root picker — before it closes the Inspector.
+
+## Spatial viewport behavior
+
+Structure, Dependencies, and Graph reconcile their camera with the actual usable viewer host. Opening/closing the Inspector or resizing the browser therefore changes the viewport without shifting the logical world center unexpectedly. Structure chooses a readable macro overview once, Dependencies centers its explicit root once, and Graph preserves its spacing-first world while using the current host as the camera viewport.
 
 ## Git overlay
 
@@ -72,4 +86,4 @@ The four main surfaces can be deep-linked with `#structure`, `#dependencies`, `#
 
 Only canonical `contains` and repository-local `imports` relations are visualized. Reverse import relationships and impact paths are derived from those canonical edges. Repoaxis does not infer function calls, runtime entry points, framework registration, data flow, or dead code in this viewer.
 
-Git badges and visual emphasis are presentation aids. Automation should rely on the exact serialized fields exposed by the index/CLI rather than UI color or geometry.
+Git badges, arrival emphasis, and graph geometry are presentation aids. Automation should rely on the exact serialized fields exposed by the index/CLI rather than UI color or geometry.
