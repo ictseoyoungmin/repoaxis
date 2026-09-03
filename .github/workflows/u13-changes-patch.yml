@@ -2,7 +2,9 @@ name: u13-changes-patch
 on:
   push:
     branches: [feat/u13-changes-surface-hardening]
-    paths: [.github/workflows/u13-changes-patch.yml]
+    paths:
+      - .github/workflows/u13-changes-patch.yml
+      - dev/tools/patch-u13-changes-interaction.mjs
 permissions:
   contents: write
 jobs:
