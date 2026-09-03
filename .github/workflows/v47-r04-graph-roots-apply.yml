@@ -1,0 +1,27 @@
+name: v47-r04-graph-roots-apply
+on:
+  push:
+    branches:
+      - feat/v47-r04-live-changes
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: node dev/tools/v47-r04-graph-roots-patch.mjs
+      - run: npm ci
+      - run: npm run check
+      - run: npm run release:dry-run
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skills/repoaxis/viewer/repoaxis.html
+          git commit -m 'V47-R04: keep current change roots in live Graph'
+          git push origin HEAD:feat/v47-r04-live-changes
