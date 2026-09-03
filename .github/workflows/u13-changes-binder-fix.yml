@@ -2,7 +2,9 @@ name: u13-changes-binder-fix
 on:
   push:
     branches: [feat/u13-changes-surface-hardening]
-    paths: [.github/workflows/u13-changes-binder-fix.yml]
+    paths:
+      - .github/workflows/u13-changes-binder-fix.yml
+      - dev/tools/fix-u13-changes-binders.mjs
 permissions:
   contents: write
 jobs:
