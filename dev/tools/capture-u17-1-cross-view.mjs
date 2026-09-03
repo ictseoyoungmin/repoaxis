@@ -35,7 +35,9 @@ async function arrival(view,name){
     const c=state.crossView;
     const host=state.view==='structure'?document.querySelector('#structureSvg'):state.view==='dependencies'?document.querySelector('#depSvg'):state.view==='graph'?document.querySelector('#graphSvg'):document.querySelector('#changesShell');
     const target=host?[...host.querySelectorAll('[data-id]')].find(el=>el.dataset.id===state.selected):null;
-    return{view:state.view,selected:state.selected,crossView:c?{...c}:null,detail:document.querySelector('#selDetail')?.textContent||'',drawerOpen:document.querySelector('#content')?.classList.contains('drawer-open')||false,arrivalTarget:!!target?.classList.contains('arrival-target'),arrivalId:target?.dataset.id||null,rect:target?(()=>{const r=target.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}})():null,innerWidth:window.innerWidth,innerHeight:window.innerHeight,scrollWidth:document.documentElement.scrollWidth};
+    const context=document.querySelector('.selection-context');
+    const contextRect=context?.getBoundingClientRect();
+    return{view:state.view,selected:state.selected,crossView:c?{...c}:null,detail:document.querySelector('#selDetail')?.textContent||'',drawerOpen:document.querySelector('#content')?.classList.contains('drawer-open')||false,arrivalTarget:!!target?.classList.contains('arrival-target'),arrivalId:target?.dataset.id||null,rect:target?(()=>{const r=target.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}})():null,contextVisible:!!context&&getComputedStyle(context).display!=='none'&&!!contextRect?.width,contextRect:contextRect?{x:contextRect.x,right:contextRect.right,width:contextRect.width}:null,innerWidth:window.innerWidth,innerHeight:window.innerHeight,scrollWidth:document.documentElement.scrollWidth};
   });
   metrics.checks[name]=m;
   await shot(`${name}.png`);
@@ -59,15 +61,15 @@ try{
   metrics.symbol_1280=await selectIndexedSymbol();
   await page.click('#entityActions [data-v="graph"]');
   await page.waitForTimeout(140);
-  metrics.checks.graph_1280=await page.evaluate(()=>{const target=document.querySelector('#graphSvg .node.arrival-target');const r=target?.getBoundingClientRect();return{arrival:!!target,detail:document.querySelector('#selDetail')?.textContent||'',drawerOpen:document.querySelector('#content')?.classList.contains('drawer-open')||false,targetRect:r?{x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}:null,innerWidth:window.innerWidth,innerHeight:window.innerHeight,scrollWidth:document.documentElement.scrollWidth};});
+  metrics.checks.graph_1280=await page.evaluate(()=>{const target=document.querySelector('#graphSvg .node.arrival-target');const r=target?.getBoundingClientRect();const context=document.querySelector('.selection-context');const cr=context?.getBoundingClientRect();return{arrival:!!target,detail:document.querySelector('#selDetail')?.textContent||'',drawerOpen:document.querySelector('#content')?.classList.contains('drawer-open')||false,contextVisible:!!context&&getComputedStyle(context).display!=='none'&&!!cr?.width,contextRect:cr?{x:cr.x,right:cr.right,width:cr.width}:null,targetRect:r?{x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}:null,innerWidth:window.innerWidth,innerHeight:window.innerHeight,scrollWidth:document.documentElement.scrollWidth};});
   await shot("u17-1-graph-arrival-1280.png");
 
   const required=[metrics.checks["u17-1-dependencies-arrival"],metrics.checks["u17-1-graph-arrival"]];
-  if(required.some(x=>!x?.arrivalTarget||!x?.drawerOpen||!x?.crossView?.projected))throw new Error("cross-view projected arrival contract failed");
-  if(!required.every(x=>x.detail.includes("containing file")))throw new Error("projection explanation missing from selection context");
+  if(required.some(x=>!x?.arrivalTarget||!x?.drawerOpen||!x?.crossView?.projected||!x?.contextVisible))throw new Error("cross-view projected arrival contract failed");
+  if(!required.every(x=>x.detail.toLowerCase().includes("containing file")))throw new Error("projection explanation missing from selection context");
   if(!required.every(x=>x.scrollWidth===x.innerWidth))throw new Error("cross-view arrival caused horizontal page overflow");
   if(!metrics.checks["u17-1-dependencies-arrival_cleared"]||!metrics.checks["u17-1-graph-arrival_cleared"])throw new Error("arrival feedback did not clear after 1400ms");
-  if(!metrics.checks.graph_1280?.arrival||metrics.checks.graph_1280.scrollWidth!==metrics.checks.graph_1280.innerWidth)throw new Error("1280px arrival regression");
+  if(!metrics.checks.graph_1280?.arrival||!metrics.checks.graph_1280?.contextVisible||!metrics.checks.graph_1280.detail.startsWith('Containing file')||metrics.checks.graph_1280.scrollWidth!==metrics.checks.graph_1280.innerWidth)throw new Error("1280px arrival/context regression");
   const r=metrics.checks.graph_1280.targetRect;
   if(!r||r.x<0||r.right>metrics.checks.graph_1280.innerWidth||r.y<0||r.bottom>metrics.checks.graph_1280.innerHeight)throw new Error("1280px arrival target is not fully visible");
 
