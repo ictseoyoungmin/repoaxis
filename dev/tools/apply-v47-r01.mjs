@@ -1,0 +1,21 @@
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+
+const htmlPath='skills/repoaxis/viewer/repoaxis.html';
+const testPath='dev/tests/integration/viewer.test.mjs';
+const evidencePath='dev/visuals/v47-r01-live-data-wiring.snapshot.md';
+const marker='<!-- V47-R01 LIVE DATA WIRING -->';
+const baseSha='74378ad9bb5b1c5304b989174454d71a38cd1f9c7538a4bff410f35469a01507';
+const sha=s=>crypto.createHash('sha256').update(s).digest('hex');
+let html=fs.readFileSync(htmlPath,'utf8');
+if(sha(html)!==baseSha)throw new Error(`R01 requires untouched v47 base; got ${sha(html)}`);
+const adapter=fs.readFileSync('dev/tools/v47-r01-adapter.js','utf8');
+html=html.replace('</body></html>',`${marker}\n<script>\n${adapter}</script>\n</body></html>`);
+fs.writeFileSync(htmlPath,html);
+let test=fs.readFileSync(testPath,'utf8');
+test=test.replace('V47_SHA="74378ad9bb5b1c5304b989174454d71a38cd1f9c7538a4bff410f35469a01507"','V47_BASE_SHA="74378ad9bb5b1c5304b989174454d71a38cd1f9c7538a4bff410f35469a01507",LIVE_MARK="<!-- V47-R01 LIVE DATA WIRING -->"');
+test=test.replace('const html=fs.readFileSync(VIEWER_HTML,"utf8"),sha=crypto.createHash("sha256").update(html).digest("hex");assert.equal(sha,V47_SHA);','const html=fs.readFileSync(VIEWER_HTML,"utf8"),mark=html.indexOf(LIVE_MARK);assert.ok(mark>0);const base=html.slice(0,mark)+"</body></html>";assert.equal(crypto.createHash("sha256").update(base).digest("hex"),V47_BASE_SHA);');
+test=test.replace('assert.doesNotMatch(html,/(?:src|href)="\\/viewer-/);','assert.match(html,/function bootLiveV47\\(\\)/);assert.match(html,/fetch\\(\'\\/api\\/index\'\\)/);assert.match(html,/fetch\\(\'\\/api\\/meta\'\\)/);assert.match(html,/fetch\\(\'\\/api\\/history\'\\)/);assert.match(html,/rebuildLiveGraphInputsV47/);assert.doesNotMatch(html,/(?:src|href)="\\/viewer-/);');
+fs.writeFileSync(testPath,test);
+fs.writeFileSync(evidencePath,`# V47-R01 — Live data wiring\n\nDate: 2026-09-04\n\n- The supplied v47 UI/UX remains the canonical shell. Removing the R01 adapter block reproduces the R00 SHA-256 \`${baseSha}\`.\n- The single HTML consumes \`/api/index\`, \`/api/meta\`, and \`/api/history\` directly.\n- Repoaxis nodes adapt into the existing v47 \`tree\` shape; canonical \`contains\` edges establish parentage and the synthetic \`root\` remains the visual anchor.\n- Canonical \`imports\` edges feed Dependencies and Graph without a second viewer model.\n- Working/staged changes and HEAD changes replace prototype Git fixtures.\n- Repository name, host, branch, HEAD SHA, commit context, Inspector last-commit context, and Git overlay context become live.\n- Graph cluster and normalized-position inputs regenerate from live file containment while retaining the existing renderer, router, interactions, CSS, and DOM.\n- R01 adds wiring only; it does not redesign the canonical viewer.\n`);
+console.log(JSON.stringify({ok:true,base_sha:baseSha,bytes:Buffer.byteLength(html)}));
