@@ -1407,6 +1407,28 @@ function boundedStructureLayoutR02(){
 containmentLayoutV11=function(focus=false){if(!focus)return containmentLayoutR01BaseR02(false);return boundedStructureLayoutR02()};
 const renderFocusR02Base=renderFocus;renderFocus=function(){const r=renderFocusR02Base();if(state.view==='structure'&&state.mode==='focus'){const count=Object.keys(focusPosV11||{}).length;const c=$('#cardCount');if(c)c.textContent=count;const m=$('#modeLabel');if(m)m.textContent='Focused containment · '+count+' visible nodes · selected context'}return r};
 
+
+
+/* R03 live search/cross-view Graph arrival framing. Preserve graph projection/layout; reconcile only camera position. */
+function frameGraphSelectionR03(id){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const node=document.querySelector('#graphSvg .g-node[data-id="'+CSS.escape(id)+'"]'),svg=$('#graphSvg'),host=$('#graphStage');
+    if(!node||!svg||!host)return;
+    const nr=node.getBoundingClientRect(),hr=host.getBoundingClientRect(),sr=svg.getBoundingClientRect(),vb=svg.viewBox?.baseVal;
+    if(!vb?.width||!vb?.height||!sr.width||!sr.height)return;
+    const cx=nr.left+nr.width/2,cy=nr.top+nr.height/2,tx=hr.left+hr.width/2,ty=hr.top+hr.height/2;
+    const dx=tx-cx,dy=ty-cy,unitX=vb.width/sr.width,unitY=vb.height/sr.height,c=state.cameras.graph||{s:1,x:0,y:0};
+    state.cameras.graph={s:c.s||1,x:(c.x||0)+dx*unitX,y:(c.y||0)+dy*unitY};
+    applyCamera('graph');
+  }));
+}
+const navigateSelectedToR03Base=navigateSelectedTo;
+navigateSelectedTo=function(view){
+  const source=byId[state.selected]||byId.root,f=source.type==='file'?source:containingFile(source),r=navigateSelectedToR03Base(view);
+  if(view==='graph'&&f)frameGraphSelectionR03(f.id);
+  return r;
+};
+
 window.__REPOAXIS_LIVE__=liveV47;bootLiveV47();
 </script>
 </body></html>
