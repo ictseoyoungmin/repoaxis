@@ -25,12 +25,17 @@ test("release contract pins package, manifests, changelog, and tag", () => {
   );
 });
 
-test("release workflow uses tokenless OIDC trusted publishing", () => {
+test("release workflow uses tokenless OIDC trusted publishing and an explicit existing-tag dispatch", () => {
   const workflow = fs.readFileSync(
     path.join(repositoryRoot, ".github/workflows/release.yml"),
     "utf8",
   );
 
+  assert.match(workflow, /^\s*workflow_dispatch:\s*$/m);
+  assert.match(workflow, /^\s*RELEASE_TAG:\s*\$\{\{ github\.event_name == 'workflow_dispatch' && inputs\.tag \|\| github\.ref_name \}\}\s*$/m);
+  assert.match(workflow, /ref:\s*\$\{\{ env\.RELEASE_TAG \}\}/);
+  assert.match(workflow, /git rev-parse --verify "refs\/tags\/\$RELEASE_TAG"/);
+  assert.match(workflow, /git merge-base --is-ancestor "\$RELEASE_TAG" origin\/main/);
   assert.match(workflow, /^\s*id-token:\s*write\s*$/m);
   assert.match(workflow, /registry-url:\s*['\"]https:\/\/registry\.npmjs\.org['\"]/);
   assert.match(workflow, /npm publish "dist\/release\/repoaxis-\$\{VERSION\}\.tgz" --access public/);
