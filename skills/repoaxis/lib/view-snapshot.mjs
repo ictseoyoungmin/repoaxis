@@ -4,7 +4,7 @@ import process from "node:process";
 import { startViewer } from "./view-server.mjs";
 
 const CSS_ASSETS = ["viewer-base.css", "viewer-surfaces.css"];
-const JS_ASSETS = ["viewer-0.js", "viewer-1.js", "viewer-2.js", "viewer-3.js", "viewer-4.js"];
+const JS_ASSETS = ["viewer-0.js", "viewer-1.js", "viewer-2.js", "viewer-3.js", "viewer-4.js", "viewer-5.js"];
 
 function inlineScript(source) {
   return String(source).replace(/<\/script/gi, "<\\/script");
