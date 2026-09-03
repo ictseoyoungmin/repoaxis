@@ -17,6 +17,13 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - name: Verify source segments
+        run: |
+          echo '10c42ebf1e3c99cb7aacbeae5816b2c1b149cf47f2037f221a49a923d764c3c2  .v47-r00/gz-00.b64' | sha256sum -c -
+          echo '51610d6d02eb01bd06b17502ba0a5e55afb813017fcc2295272d3fd3677682d3  .v47-r00/gz-01.b64' | sha256sum -c -
+          echo 'a33d5defffdb7dc528b7dfa342ad383447cd804f672b59ccbebaf7e689fff12f  .v47-r00/gz-02.b64' | sha256sum -c -
+          echo 'bb4e10520e7c7c71e0a2c020d07e3d3b695433aceddd28fd0ab2a1cf86730fa2  .v47-r00/gz-03.b64' | sha256sum -c -
+          echo 'cdcecea6818c82ab6739f331a2225d52ec68f41b751df0fcb3823b095de9b36e  .v47-r00/gz-04.b64' | sha256sum -c -
       - name: Apply canonical reset
         run: |
           sed -i 's#chunk-02.b64#gz-00.b64#' .v47-r00/apply.py
