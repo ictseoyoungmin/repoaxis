@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 const p='skills/repoaxis/viewer/repoaxis.html';
 let s=fs.readFileSync(p,'utf8');
-const from="$$('.kv').forEach";
+const from="$('.kv').forEach";
 const to="document.querySelectorAll('.kv').forEach";
 const count=s.split(from).length-1;
 if(count!==1)throw new Error(`expected exactly one R01 selector patch target, got ${count}`);
