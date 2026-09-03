@@ -1,0 +1,31 @@
+name: u13-changes-final
+on:
+  push:
+    branches: [feat/u13-changes-surface-hardening]
+    paths: [.github/workflows/u13-changes-final.yml]
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run check
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: node dev/tools/capture-u13-changes-final.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: u13-changes-final
+          path: |
+            u13-changes-staged-selected.png
+            u13-changes-all-selected.png
+            u13-changes-working-partial.png
+            u13-changes-impact-destination.png
+            u13-changes-responsive-1280.png
+            u13-final-metrics.json
+            u13-changes-direct-manipulation.html
