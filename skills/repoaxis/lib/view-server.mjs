@@ -9,16 +9,6 @@ import { resolveGitRoot } from "./git.mjs";
 
 const VIEWER_DIR = fileURLToPath(new URL("../viewer/", import.meta.url));
 const VIEWER_HTML = path.join(VIEWER_DIR, "repoaxis.html");
-const VIEWER_ASSETS = new Map([
-  ["/viewer-base.css", ["viewer-base.css", "text/css; charset=utf-8"]],
-  ["/viewer-surfaces.css", ["viewer-surfaces.css", "text/css; charset=utf-8"]],
-  ["/viewer-0.js", ["viewer-0.js", "text/javascript; charset=utf-8"]],
-  ["/viewer-1.js", ["viewer-1.js", "text/javascript; charset=utf-8"]],
-  ["/viewer-2.js", ["viewer-2.js", "text/javascript; charset=utf-8"]],
-  ["/viewer-3.js", ["viewer-3.js", "text/javascript; charset=utf-8"]],
-  ["/viewer-4.js", ["viewer-4.js", "text/javascript; charset=utf-8"]],
-  ["/viewer-5.js", ["viewer-5.js", "text/javascript; charset=utf-8"]],
-]);
 const LOOPBACK_HOST = "127.0.0.1";
 
 function json(res, status, value) {
@@ -162,10 +152,6 @@ export async function startViewer({ root = process.cwd(), port = 4173, open = tr
 
     if (url.pathname === "/" || url.pathname === "/index.html") {
       return text(res, 200, viewerHtml, "text/html; charset=utf-8");
-    }
-    if (VIEWER_ASSETS.has(url.pathname)) {
-      const [fileName, contentType] = VIEWER_ASSETS.get(url.pathname);
-      return text(res, 200, fs.readFileSync(path.join(VIEWER_DIR, fileName), "utf8"), contentType);
     }
     if (url.pathname === "/api/health") {
       return json(res, 200, { ok: true, repository: ".", host: LOOPBACK_HOST });
