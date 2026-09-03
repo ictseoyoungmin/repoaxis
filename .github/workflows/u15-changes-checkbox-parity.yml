@@ -23,3 +23,4 @@ jobs:
           git add skills/repoaxis/viewer/viewer-2.js skills/repoaxis/viewer/viewer-surfaces.css dev/tests/integration/viewer-changes-interaction.test.mjs dev/tests/integration/viewer-changes-checkbox-parity.test.mjs
           git commit -m 'U15: match Changes checkbox prototype'
           git push origin HEAD:feat/u15-changes-checkbox-parity
+# rerun after helper escaping fix
