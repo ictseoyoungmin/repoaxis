@@ -1545,6 +1545,25 @@ switchView=function(view,statePatch={}){
   }
   return r;
 };
+
+function installStructureOverviewClickAuthority(){
+  const svg=$('#overviewSvg');
+  if(!svg||svg.dataset.wholeMapClickAuthority==='true')return;
+  svg.dataset.wholeMapClickAuthority='true';
+  svg.addEventListener('click',e=>{
+    const node=e.target.closest?.('.overview-node');
+    if(!node||!svg.contains(node))return;
+    const id=node.dataset.id;
+    if(!id||!byId[id])return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    selectStructureOverview(id,{drawer:true,zoom:true});
+  },true);
+}
+const renderOverviewWithClickAuthority=renderOverview;
+renderOverview=function(){const r=renderOverviewWithClickAuthority();installStructureOverviewClickAuthority();return r};
+installStructureOverviewClickAuthority();
+
 $('#focusBtn').onclick=()=>enterStructureFocus(state.selected||'root');
 $('#localFocusBtn').onclick=()=>enterStructureFocus(state.selected||'root');
 $('#backBtn').onclick=()=>selectStructureOverview(state.selected||'root',{drawer:true,zoom:true});
