@@ -1474,12 +1474,12 @@ function overviewVisibleBBoxR05(el){
 }
 function clearOverviewAcquisitionR05(){
   overviewNativePickV33.press=null;
-  $('#overviewSvg .overview-node').forEach(el=>{el.classList.remove('acquisition-armed');el.__visibleBBoxV37=null});
+  document.querySelectorAll('#overviewSvg .overview-node').forEach(el=>{el.classList.remove('acquisition-armed');el.__visibleBBoxV37=null});
 }
 installOverviewHitZonesV33=function(){
   if(state.mode!=='overview')return;
   const svg=$('#overviewSvg'),stage=$('#structureStage');if(!svg||!stage)return;
-  $('#overviewSvg .overview-node').forEach(el=>{
+  document.querySelectorAll('#overviewSvg .overview-node').forEach(el=>{
     el.onclick=null;el.querySelectorAll('.overview-hit-zone,.overview-hover-ring').forEach(n=>n.remove());
     const box=overviewVisibleBBoxR05(el);if(!box)return;
     const ns='http://www.w3.org/2000/svg',hit=document.createElementNS(ns,'rect'),ring=document.createElementNS(ns,'rect');
@@ -1491,7 +1491,7 @@ installOverviewHitZonesV33=function(){
 };
 installOverviewAssistZonesV37=function(){
   if(state.mode!=='overview')return;const ns='http://www.w3.org/2000/svg';
-  $('#overviewSvg .overview-node').forEach(el=>{
+  document.querySelectorAll('#overviewSvg .overview-node').forEach(el=>{
     el.querySelectorAll('.overview-assist-zone').forEach(n=>n.remove());const box=overviewVisibleBBoxR05(el);if(!box)return;
     el.__visibleBBoxV37={x:box.x,y:box.y,width:box.width,height:box.height};const assist=document.createElementNS(ns,'rect');assist.setAttribute('class','overview-assist-zone');el.insertBefore(assist,el.firstChild);sizeOverviewAssistZoneV37(el);
     el.onpointerenter=()=>{if(state.mode!=='overview')return;el.classList.add('acquisition-armed');sizeOverviewAssistZoneV37(el)};el.onpointerleave=()=>{if(state.mode!=='overview')return;el.classList.remove('acquisition-armed')};
