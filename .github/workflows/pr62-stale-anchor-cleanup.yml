@@ -24,7 +24,11 @@ jobs:
 
           path = Path('skills/repoaxis/viewer/repoaxis.html')
           text = path.read_text(encoding='utf-8')
-          old = "function overviewSelectionAnchor(id){let n=byId[id];while(n&&!overviewPositions?.[n.id])n=n.parent?byId[n.parent]:null;return n?.id||null}"
+          old = """function overviewSelectionAnchor(id){
+            let n=byId[id];
+            while(n&&!overviewPositions?.[n.id])n=n.parent?byId[n.parent]:null;
+            return n?.id||'root';
+          }"""
           new = "function overviewSelectionAnchor(id){return id}"
           count = text.count(old)
           if count != 1:
