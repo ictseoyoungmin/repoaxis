@@ -1,0 +1,26 @@
+name: structure-whole-map-browser-qa
+on:
+  push:
+    branches:
+      - feat/structure-whole-map-default
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: node dev/tools/structure-whole-map-browser-qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: structure-whole-map-browser-qa
+          path: dev/visuals/structure-whole-map-browser-qa
+          if-no-files-found: warn
