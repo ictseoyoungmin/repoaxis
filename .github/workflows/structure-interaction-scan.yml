@@ -1,0 +1,16 @@
+name: structure-interaction-scan
+on:
+  push:
+    branches:
+      - feat/structure-whole-map-default
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+      - run: node dev/tools/structure-interaction-scan.mjs
