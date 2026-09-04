@@ -1468,11 +1468,7 @@ renderOverview=function(){
 
 
 /* Structure keeps the repository map intact by default. Local containment is an explicit option. */
-function overviewSelectionAnchor(id){
-  let n=byId[id];
-  while(n&&!overviewPositions?.[n.id])n=n.parent?byId[n.parent]:null;
-  return n?.id||'root';
-}
+function overviewSelectionAnchor(id){return id}
 function renderOverviewSelectionCard(){
   const graph=$('#overviewGraph'),n=byId[state.selected],anchorId=overviewSelectionAnchor(state.selected),p=overviewPositions?.[anchorId];
   graph?.querySelector('[data-overview-selection-card]')?.remove();
