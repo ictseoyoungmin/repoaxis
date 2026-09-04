@@ -1,0 +1,39 @@
+name: responsive-zoom-fix
+on:
+  push:
+    branches:
+      - fix/viewer-responsive-zoom-controls
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - name: Patch compact header containment
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const p='skills/repoaxis/viewer/repoaxis.html';
+          let s=fs.readFileSync(p,'utf8');
+          const old='@media(max-width:1280px){.selection-context{width:190px}.selection-context .sel-view{display:none}.commit{display:none}}@media(max-width:1100px){.selection-context{display:none}}';
+          const next='@media(max-width:1280px){.topbar{gap:12px;padding-left:18px;padding-right:16px}.brand{min-width:150px}.repo-pill{min-width:0;max-width:300px}.repo-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.branch{min-width:0;max-width:230px}.branch>span:first-of-type{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.selection-context{width:170px;min-width:0}.selection-context .sel-view{display:none}.search{width:min(280px,24vw);min-width:190px}.commit{display:none}}@media(max-width:1100px){.selection-context{display:none}.repo-pill{max-width:260px}.branch{max-width:190px}.search{min-width:170px}}';
+          if(!s.includes(old)) throw new Error('responsive seam not found');
+          s=s.replace(old,next);
+          fs.writeFileSync(p,s);
+          NODE
+      - run: npm ci
+      - run: npm run check
+      - run: npm run release:dry-run
+      - name: Commit patch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skills/repoaxis/viewer/repoaxis.html
+          git commit -m 'Fix compact viewer header containment'
+          git push origin HEAD:fix/viewer-responsive-zoom-controls
