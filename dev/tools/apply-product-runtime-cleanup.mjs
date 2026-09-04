@@ -14,7 +14,7 @@ s=s.replace(fixture,`const tree=[{id:'root',parent:null,type:'root',label:'root/
 must("depRoot:'config',depRootHome:'config'","depRoot:'root',depRootHome:'root'",'neutral dependency root');
 
 // Static sample graph/history state must also start empty.
-const clusters=/let graphClustersV15=\[[\s\S]*?\];let graphPosV11=\{\};/;
+const clusters=/(?:const|let) graphClustersV15=\[[\s\S]*?\];let graphPosV11=\{\};/;
 if(!clusters.test(s))throw new Error('sample graph clusters not found');s=s.replace(clusters,'let graphClustersV15=[];let graphPosV11={};');
 const history=/const lastCommitChangesV42=\[[\s\S]*?\];\nconst gitStatusPriorityV42=/;
 if(!history.test(s))throw new Error('sample last-commit changes not found');s=s.replace(history,'const lastCommitChangesV42=[];\nconst gitStatusPriorityV42=');
