@@ -15,6 +15,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - run: node dev/tools/prepare-cleanup-transform.mjs
       - run: node dev/tools/apply-product-runtime-cleanup.mjs
       - run: node dev/tools/check-product-viewer.mjs
       - run: npm ci
