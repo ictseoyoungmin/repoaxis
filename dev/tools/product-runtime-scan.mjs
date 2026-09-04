@@ -2,11 +2,9 @@ import fs from 'node:fs';
 const p='skills/repoaxis/viewer/repoaxis.html';
 const s=fs.readFileSync(p,'utf8');
 const ids=[...new Set([...s.matchAll(/\b[A-Za-z_$][\w$]*(?:V|R)\d+[A-Za-z0-9_$]*\b/g)].map(m=>m[0]))].sort();
-const snippets={};
-for(const name of ['tree','importEdges','changes','workingChangesV42','lastCommitChangesV42']){
-  const re=new RegExp(`(?:const|let|var)\\s+${name}\\s*=`, 'g');
-  const m=re.exec(s); if(m) snippets[name]=s.slice(Math.max(0,m.index-300),Math.min(s.length,m.index+1800));
-}
-const bootNeedles=['renderOverview();','renderDependencies();','renderChanges();','renderGraph();','renderDrawer();','switchViewUI();','bootLiveV47();'];
-const bootHits=bootNeedles.map(needle=>({needle,indexes:[...s.matchAll(new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'))].map(m=>m.index)}));
-console.log(JSON.stringify({bytes:s.length,count:ids.length,versionIdentifiers:ids,snippets,bootHits,tail:s.slice(-9000)},null,2));
+const normalize=id=>id.replace(/(?:V|R)\d+/g,'').replace(/__+/g,'_');
+const groups=new Map();for(const id of ids){const k=normalize(id);(groups.get(k)||groups.set(k,[]).get(k)).push(id)}
+const collisions=[...groups.entries()].filter(([,v])=>v.length>1).map(([base,members])=>({base,members}));
+const existing=new Set([...s.matchAll(/\b[A-Za-z_$][\w$]*\b/g)].map(m=>m[0]));
+const directConflicts=[...groups.entries()].filter(([base,members])=>members.length===1&&existing.has(base)&&base!==members[0]).map(([base,members])=>({base,members}));
+console.log(JSON.stringify({count:ids.length,collisions,directConflicts},null,2));
