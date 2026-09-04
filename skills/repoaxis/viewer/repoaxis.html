@@ -123,7 +123,7 @@ html[data-repoaxis-live="loading"] .view-stage,html[data-repoaxis-live="loading"
   <div class="card-head"><span class="title-icon" id="titleIcon"></span><span class="card-title" id="cardTitle">Structure</span><span class="count" id="cardCount">128</span><span class="card-state-badge" id="cardStateBadge" hidden></span><span class="card-subtle" id="cardSubtitle">Containment topology</span><div class="head-spacer"></div><button class="tool-btn" id="fitBtn" title="Fit view"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button><button class="tool-btn" id="focusBtn" title="Focus"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><circle cx="12" cy="12" r="3"/></svg></button><button class="tool-btn" id="filterBtn" title="Filter"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16l-6 7v5l-4 2v-7z"/></svg></button><button class="tool-btn" title="More">•••</button></div>
   <div class="content" id="content"><div class="view-host">
     <section class="view-stage structure-stage canvas-pan active" id="structureStage">
-      <div class="mode-strip"><span class="mode-label" id="modeLabel">Whole repository · labels hidden</span><div class="structure-crumbs" id="structureCrumbs" hidden></div><button class="mini-action accent" id="backBtn" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 6l-6 6 6 6"/><path d="M4 12h16"/></svg><span>Whole topology</span></button><button class="mini-action" id="labelsBtn">Show labels</button></div>
+      <div class="mode-strip"><span class="mode-label" id="modeLabel">Whole repository · labels hidden</span><div class="structure-crumbs" id="structureCrumbs" hidden></div><button class="mini-action accent" id="backBtn" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 6l-6 6 6 6"/><path d="M4 12h16"/></svg><span>Whole topology</span></button><button class="mini-action" id="labelsBtn">Show labels</button><button class="mini-action" id="localFocusBtn" title="Show only the selected local containment context">Focus selection</button></div>
       <div class="overview-wrap"><svg id="overviewSvg" viewBox="0 0 1180 760" preserveAspectRatio="xMidYMid meet" aria-label="Repository overview topology"></svg></div><div class="focus-wrap"><svg id="focusSvg" viewBox="0 0 1040 760" preserveAspectRatio="xMidYMid meet" aria-label="Focused repository containment tree"></svg></div>
       <div class="legend"><span class="legend-item"><svg class="folder-legend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3.5 8.5h5l2-2h10v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" fill="rgba(117,110,255,.08)"/></svg><span>folder</span></span><span class="legend-item"><svg class="file-legend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3.5h7l4 4v13H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M14 3.5v4h4"/></svg><span>file</span></span><span class="legend-item"><svg class="symbol-legend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M9.3 14.8c.9-2.2 4.5-3.3 5.4-5.6"/><path d="M9.3 9.2h5.4"/></svg><span>symbol</span></span></div>
     </section>
@@ -1465,6 +1465,89 @@ renderOverview=function(){
   const generation=++overviewGeneration;clearOverviewAcquisition();const r=renderOverviewBeforeHydrationGuard();
   requestAnimationFrame(()=>{if(generation!==overviewGeneration||state.mode!=='overview')return;installOverviewHitZones();installOverviewAssistZones();refreshOverviewAssistZones()});return r;
 };
+
+
+/* Structure keeps the repository map intact by default. Local containment is an explicit option. */
+function renderOverviewSelectionCard(){
+  const graph=$('#overviewGraph'),n=byId[state.selected],p=overviewPositions?.[state.selected];
+  graph?.querySelector('[data-overview-selection-card]')?.remove();
+  if(!graph||!n||!p||state.mode==='focus')return;
+  const holder=document.createElementNS('http://www.w3.org/2000/svg','g');
+  holder.setAttribute('data-overview-selection-card','');
+  holder.innerHTML=nodeCard(n,p[0],p[1]);
+  const card=holder.firstElementChild;
+  if(!card)return;
+  card.classList.add('overview-selection-card');
+  card.onclick=e=>{e.stopPropagation();selectStructureOverview(n.id,{zoom:false})};
+  graph.appendChild(holder);
+}
+function wireOverviewSelection(){
+  document.querySelectorAll('#overviewSvg .overview-node').forEach(el=>el.onclick=()=>selectStructureOverview(el.dataset.id));
+}
+function frameStructureOverviewSelection(id){
+  requestAnimationFrame(()=>{
+    const c=state.cameras.structureOverview||{s:1,x:0,y:0};
+    state.cameras.structureOverview={s:Math.max(c.s||1,1.45),x:c.x||0,y:c.y||0};
+    applyCamera('structureOverview');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const target=document.querySelector('#overviewSvg [data-overview-selection-card] .node-card')||document.querySelector('#overviewSvg .overview-node[data-id="'+CSS.escape(id)+'"]');
+      const svg=$('#overviewSvg'),host=$('#structureStage');
+      if(!target||!svg||!host)return;
+      const tr=target.getBoundingClientRect(),hr=host.getBoundingClientRect(),sr=svg.getBoundingClientRect(),vb=svg.viewBox?.baseVal;
+      if(!vb?.width||!vb?.height||!sr.width||!sr.height)return;
+      const dx=(hr.left+hr.width/2)-(tr.left+tr.width/2),dy=(hr.top+hr.height/2)-(tr.top+tr.height/2),c2=state.cameras.structureOverview;
+      state.cameras.structureOverview={s:c2.s,x:c2.x+dx*(vb.width/sr.width),y:c2.y+dy*(vb.height/sr.height)};
+      applyCamera('structureOverview');
+    }));
+  });
+}
+function selectStructureOverview(id,{drawer=true,zoom=true}={}){
+  if(!byId[id])return;
+  state.view='structure';state.mode='overview';state.selected=id;state.drawer=drawer;
+  $('#structureStage').classList.remove('focused');
+  $('#content').classList.toggle('drawer-open',drawer);
+  $('#hint')?.classList.add('hide');
+  $('#modeLabel').textContent='Whole repository · selected context';
+  $('#backBtn').style.display='none';
+  $('#labelsBtn').style.display='inline-flex';
+  $('#localFocusBtn').style.display='inline-flex';
+  switchViewUI();renderOverview();renderDrawer();
+  if(zoom)frameStructureOverviewSelection(id);
+}
+const renderOverviewWholeMap=renderOverview;
+renderOverview=function(){const r=renderOverviewWholeMap();wireOverviewSelection();renderOverviewSelectionCard();return r};
+const navigateSelectedToWholeMap=navigateSelectedTo;
+navigateSelectedTo=function(view){
+  if(view==='structure'){
+    const source=byId[state.selected]||byId.root;
+    selectStructureOverview(source.id,{drawer:true,zoom:true});
+    return;
+  }
+  return navigateSelectedToWholeMap(view);
+};
+const renderSearchWholeMap=renderSearch;
+renderSearch=function(q){
+  const r=renderSearchWholeMap(q);
+  if(state.view==='structure')document.querySelectorAll('.search-result').forEach(row=>row.onclick=()=>{closeSearch();selectStructureOverview(row.dataset.id,{drawer:true,zoom:true})});
+  return r;
+};
+const switchViewWholeMapDefault=switchView;
+switchView=function(view,statePatch={}){
+  const patch=view==='structure'&&!Object.prototype.hasOwnProperty.call(statePatch,'mode')?{...statePatch,mode:'overview'}:statePatch;
+  const r=switchViewWholeMapDefault(view,patch);
+  if(view==='structure'&&patch.mode!=='focus'){
+    $('#structureStage').classList.remove('focused');
+    $('#backBtn').style.display='none';
+    $('#labelsBtn').style.display='inline-flex';
+    $('#localFocusBtn').style.display='inline-flex';
+    $('#modeLabel').textContent=state.selected&&state.selected!=='root'?'Whole repository · selected context':'Whole repository · labels hidden';
+    renderOverview();
+  }
+  return r;
+};
+$('#focusBtn').onclick=()=>enterStructureFocus(state.selected||'root');
+$('#localFocusBtn').onclick=()=>enterStructureFocus(state.selected||'root');
+$('#backBtn').onclick=()=>selectStructureOverview(state.selected||'root',{drawer:true,zoom:true});
 
 window.__REPOAXIS_LIVE__=repositoryRuntime;bootRepository();
 </script>
