@@ -5,4 +5,7 @@ const nextComments="s=s.replace(/\\/\\*\\s*[vVrR]\\d+(?:\\.\\d+)*\\s*(?:[—–:
 if(!s.includes(oldComments))throw new Error('comment cleanup seam missing');s=s.replace(oldComments,nextComments);
 const oldGuard="const internal=/\\b(?:[A-Za-z_$][\\w$]*(?:V|R)\\d+[A-Za-z0-9_$]*|[vVrR]\\d+(?:\\.\\d+)*)\\b/;if(internal.test(s))throw new Error('internal version token remains: '+s.match(internal)[0]);";
 const nextGuard="const internal=/\\b[A-Za-z_$][\\w$]*(?:V|R)\\d+[A-Za-z0-9_$]*\\b/;const taggedComment=/(?:\\/\\*|\\/\\/|<!--)\\s*[vVrR]\\d+(?:\\.\\d+)*\\b/;if(internal.test(s))throw new Error('internal version identifier remains: '+s.match(internal)[0]);if(taggedComment.test(s))throw new Error('internal iteration comment remains: '+s.match(taggedComment)[0]);";
-if(!s.includes(oldGuard))throw new Error('guard seam missing');s=s.replace(oldGuard,nextGuard);fs.writeFileSync(p,s);console.log('scoped cleanup policy');
+if(!s.includes(oldGuard))throw new Error('guard seam missing');s=s.replace(oldGuard,nextGuard);
+const needle="for(const [old,next] of [...map.entries()].sort((a,b)=>b[0].length-a[0].length))s=s.replace";
+const check="const targetGroups=new Map();for(const [old,next] of map)(targetGroups.get(next)||targetGroups.set(next,[]).get(next)).push(old);const duplicateTargets=[...targetGroups.entries()].filter(([,olds])=>olds.length>1);if(duplicateTargets.length)throw new Error('duplicate semantic rename targets: '+JSON.stringify(duplicateTargets));\n";
+if(!s.includes(needle))throw new Error('rename apply seam missing');s=s.replace(needle,check+needle);fs.writeFileSync(p,s);console.log('scoped cleanup policy with rename preflight');
