@@ -1550,6 +1550,12 @@ function installStructureOverviewClickAuthority(){
   const svg=$('#overviewSvg');
   if(!svg||svg.dataset.wholeMapClickAuthority==='true')return;
   svg.dataset.wholeMapClickAuthority='true';
+  const stopLegacyOverviewPick=e=>{
+    const node=e.target.closest?.('.overview-node');
+    if(!node||!svg.contains(node))return;
+    e.stopImmediatePropagation();
+  };
+  for(const type of ['pointerdown','mousedown','pointerup','mouseup','dblclick'])svg.addEventListener(type,stopLegacyOverviewPick,true);
   svg.addEventListener('click',e=>{
     const node=e.target.closest?.('.overview-node');
     if(!node||!svg.contains(node))return;
