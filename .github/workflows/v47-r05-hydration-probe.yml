@@ -1,0 +1,25 @@
+name: v47-r05-hydration-probe
+on:
+  push:
+    branches:
+      - fix/v47-r05-root-overview-hydration
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: node dev/tools/v47-r05-hydration-probe.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v47-r05-hydration-probe
+          path: ${{ runner.temp }}/v47-r05
