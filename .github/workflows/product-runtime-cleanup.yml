@@ -16,6 +16,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: node dev/tools/apply-product-runtime-cleanup.mjs
+      - run: node dev/tools/check-product-viewer.mjs
       - run: npm ci
       - run: npm run check
       - run: npm run release:dry-run
