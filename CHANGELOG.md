@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.16.0 — 2026-09-26
+
+- Rebased the human viewer on the canonical V47 single-file product surface, removing the post-0.15 split viewer reconstruction while preserving Git plus the working tree as authority and `.repoaxis.json` as the rebuildable structural projection.
+- Wired the V47 shell back to live Repoaxis index, metadata, history, Structure, Changes, and Graph data instead of product fixtures, and removed internal version-coded runtime naming from the shipped surface.
+- Hardened live Structure navigation with bounded containment context, search-to-Graph arrival reconciliation, changed-file impact roots, duplicate-root collapse, and overview hydration for real repositories.
+- Simplified frozen snapshot packaging around the canonical single-file viewer so live and exported analysis surfaces share the same product boundary.
+- Improved compact-width containment and zoom controls and retained dedicated visual evidence for the V47 reset, live-data wiring, navigation, search handoff, Changes, root/overview hydration, and responsive controls.
+- Reverted the experimental whole-repository Structure default and semantic-zoom iterations from PRs #61 and #62 after narrow-viewport review showed a UX regression; the restored pre-experiment Structure interaction is the v0.16.0 baseline.
+- Preserved the existing CLI/indexing/release contracts while treating future Structure changes as requiring both desktop and narrow-viewport visual QA before closure.
+
 ## 0.15.0 — 2026-09-03
 
 - Hardened the human viewer from the initial 0.14 product shell into a more continuous repository-analysis surface while preserving Git plus the working tree as authority and `.repoaxis.json` as the rebuildable canonical projection.
